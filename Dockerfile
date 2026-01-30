@@ -15,8 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variable for build
+# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV DOCKER_BUILD true
 
 # Build the application
 RUN npm run build
