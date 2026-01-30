@@ -46,7 +46,7 @@ export function Navbar() {
                 className={`relative h-10 sm:h-12 w-auto transition-transform duration-300 group-hover:scale-105 ${!isScrolled ? 'pointer-events-none' : ''}`}
               >
                 <Image
-                  src="/Logo.png"
+                  src="/logo.png"
                   alt="Swapna Beauty Parlour"
                   width={180}
                   height={48}

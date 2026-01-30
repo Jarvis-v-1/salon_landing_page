@@ -76,7 +76,7 @@ export function LocationSection() {
             {/* Title */}
             <div className="flex items-center gap-4">
               <Image
-                src="/Logo.png"
+                src="/logo.png"
                 alt="Swapna Beauty Parlour"
                 width={180}
                 height={48}

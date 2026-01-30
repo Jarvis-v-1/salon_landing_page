@@ -41,7 +41,7 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Link href="#home" className="inline-block mb-6">
               <Image
-                src="/Logo.png"
+                src="/logo.png"
                 alt="Swapna Beauty Parlour"
                 width={200}
                 height={54}

@@ -51,7 +51,7 @@ export function Hero() {
               >
                 <div className="relative inline-block lg:text-left text-center">
                   <Image
-                    src="/Logo.png"
+                    src="/logo.png"
                     alt="Swapna Beauty Parlour"
                     width={500}
                     height={150}
