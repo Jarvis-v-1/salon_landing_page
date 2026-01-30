@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseISO, startOfDay, endOfDay } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { availabilityQuerySchema } from "../../../lib/validation";
 import { getServiceById } from "../../../lib/services";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
@@ -27,8 +28,13 @@ async function fetchBusyBlocks(
   if (!hasCalendarConfig()) return [];
   const calendar = getCalendarClient();
 
-  const dayStart = startOfDay(parseISO(dateISO));
-  const dayEnd = endOfDay(parseISO(dateISO));
+  // Get the date in Eastern Time zone, then get start/end of day in ET
+  const dateInET = toZonedTime(parseISO(dateISO + "T00:00:00Z"), SALON_TIMEZONE);
+  const dayStartET = startOfDay(dateInET);
+  const dayEndET = endOfDay(dateInET);
+  // Convert back to UTC for Google Calendar API (which expects UTC)
+  const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
+  const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
 
   const blocks: BusyBlock[] = [];
   
@@ -38,7 +44,7 @@ async function fetchBusyBlocks(
   // Check each employee's calendar separately
   for (const employeeId of employeesToCheck) {
     try {
-      const calendarId = getCalendarIdForEmployee(employeeId);
+      const calendarId = await getCalendarIdForEmployee(employeeId);
       
       const resp = await calendar.events.list({
         calendarId,

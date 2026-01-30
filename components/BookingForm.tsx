@@ -44,7 +44,7 @@ export function BookingForm() {
   const [submitState, setSubmitState] = useState<
     | { status: "idle" }
     | { status: "submitting" }
-    | { status: "success"; startTimeISO: string }
+    | { status: "success"; startTimeISO: string; emailSent?: boolean; customerEmail?: string }
     | { status: "error"; message: string }
   >({ status: "idle" });
 
@@ -108,10 +108,39 @@ export function BookingForm() {
       // If user explicitly chooses employee, filter slots to that employee
       if (employeeId) qs.set("employeeId", employeeId);
 
-      const res = await fetch(`/api/availability?${qs.toString()}`);
-      const data = (await res.json()) as AvailabilityResponse;
-      if (!cancelled) setAvailability(data);
-      setLoadingSlots(false);
+      try {
+        const res = await fetch(`/api/availability?${qs.toString()}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const text = await res.text();
+        if (!text) {
+          throw new Error("Empty response from server");
+        }
+
+        let data: AvailabilityResponse;
+        try {
+          data = JSON.parse(text) as AvailabilityResponse;
+        } catch (parseError) {
+          console.error("Failed to parse JSON response:", parseError);
+          console.error("Response text:", text);
+          throw new Error("Invalid JSON response from server");
+        }
+
+        if (!cancelled) setAvailability(data);
+      } catch (error) {
+        console.error("Error loading availability:", error);
+        if (!cancelled) {
+          setAvailability({
+            ok: false,
+            error: error instanceof Error ? error.message : "Failed to load availability"
+          });
+        }
+      } finally {
+        if (!cancelled) setLoadingSlots(false);
+      }
     }
     if (date && serviceId) void load();
     return () => {
@@ -153,7 +182,12 @@ export function BookingForm() {
         });
         return;
       }
-      setSubmitState({ status: "success", startTimeISO: data.startTimeISO });
+      setSubmitState({ 
+        status: "success", 
+        startTimeISO: data.startTimeISO,
+        emailSent: data.emailSent,
+        customerEmail: values.customerEmail
+      });
     } catch (e) {
       setSubmitState({
         status: "error",
@@ -309,6 +343,9 @@ export function BookingForm() {
               placeholder="you@example.com"
               {...register("customerEmail")}
             />
+            <p className="text-xs text-maroon-700/60">
+              We'll send you a confirmation email with your appointment details
+            </p>
           </label>
 
           <label className="grid gap-2">
@@ -329,11 +366,27 @@ export function BookingForm() {
 
         {submitState.status === "success" ? (
           <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            Appointment requested for{" "}
-            <span className="font-medium">
-              {format(parseISO(submitState.startTimeISO), "MMM d, yyyy · h:mm a")}
-            </span>
-            . If you don't see it confirmed, message us on WhatsApp.
+            <p className="font-medium mb-2">✓ Appointment confirmed!</p>
+            <p className="mb-2">
+              Your appointment is scheduled for{" "}
+              <span className="font-medium">
+                {format(parseISO(submitState.startTimeISO), "MMM d, yyyy · h:mm a")}
+              </span>
+              .
+            </p>
+            {submitState.emailSent && submitState.customerEmail ? (
+              <p className="mt-2 text-xs border-t border-emerald-200 pt-2">
+                ✓ A confirmation email has been sent to{" "}
+                <span className="font-medium">{submitState.customerEmail}</span>
+              </p>
+            ) : submitState.customerEmail ? (
+              <p className="mt-2 text-xs border-t border-emerald-200 pt-2 text-emerald-600">
+                Note: Email confirmation is not configured. Your appointment is still confirmed.
+              </p>
+            ) : null}
+            <p className="mt-2 text-xs">
+              If you need to reschedule, please contact us at least 24 hours in advance.
+            </p>
           </div>
         ) : null}
 

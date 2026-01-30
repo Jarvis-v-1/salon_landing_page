@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { addMinutes, parseISO, startOfDay, endOfDay } from "date-fns";
+import { addMinutes, parseISO, startOfDay, endOfDay, format } from "date-fns";
+import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { createAppointmentSchema } from "../../../lib/validation";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
 import { getServiceById } from "../../../lib/services";
@@ -12,6 +13,7 @@ import {
   SALON_TIMEZONE
 } from "../../../lib/googleCalendar";
 import { fetchEmployeeAvailability } from "../../../lib/employeeAvailability";
+import { sendBookingConfirmation, isEmailConfigured } from "../../../lib/email";
 
 async function employeeHasConflict(params: {
   dateISO: string;
@@ -24,10 +26,15 @@ async function employeeHasConflict(params: {
 
   const calendar = getCalendarClient();
   // Use the employee's specific calendar ID
-  const calendarId = getCalendarIdForEmployee(employeeId);
+  const calendarId = await getCalendarIdForEmployee(employeeId);
 
-  const dayStart = startOfDay(parseISO(dateISO));
-  const dayEnd = endOfDay(parseISO(dateISO));
+  // Get the date in Eastern Time zone, then get start/end of day in ET
+  const dateInET = toZonedTime(parseISO(dateISO + "T00:00:00Z"), SALON_TIMEZONE);
+  const dayStartET = startOfDay(dateInET);
+  const dayEndET = endOfDay(dateInET);
+  // Convert back to UTC for Google Calendar API (which expects UTC)
+  const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
+  const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
 
   const resp = await calendar.events.list({
     calendarId,
@@ -146,7 +153,7 @@ export async function POST(req: Request) {
 
   const calendar = getCalendarClient();
   // Use the employee's specific calendar ID
-  const calendarId = getCalendarIdForEmployee(input.employeeId);
+  const calendarId = await getCalendarIdForEmployee(input.employeeId);
 
   const summary = `${input.customerName} - ${service.label}`;
   const descriptionLines = [
@@ -158,13 +165,18 @@ export async function POST(req: Request) {
     input.notes ? `Notes: ${input.notes}` : null
   ].filter(Boolean);
 
+  // Format dates in Eastern Time zone for Google Calendar
+  // Google Calendar expects the dateTime to represent the local time in the specified timezone
+  const startDateTime = formatInTimeZone(start, SALON_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+  const endDateTime = formatInTimeZone(end, SALON_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+
   const resp = await calendar.events.insert({
     calendarId,
     requestBody: {
       summary,
       description: descriptionLines.join("\n"),
-      start: { dateTime: start.toISOString(), timeZone: SALON_TIMEZONE },
-      end: { dateTime: end.toISOString(), timeZone: SALON_TIMEZONE },
+      start: { dateTime: startDateTime, timeZone: SALON_TIMEZONE },
+      end: { dateTime: endDateTime, timeZone: SALON_TIMEZONE },
       extendedProperties: {
         private: {
           employeeId: input.employeeId,
@@ -182,11 +194,32 @@ export async function POST(req: Request) {
     }
   });
 
+  // Send confirmation email if email is configured and customer provided email
+  if (isEmailConfigured() && input.customerEmail) {
+    try {
+      await sendBookingConfirmation({
+        to: input.customerEmail,
+        customerName: input.customerName,
+        serviceName: service.label,
+        employeeName: employee.name,
+        date: format(start, "EEEE, MMMM d, yyyy"),
+        time: format(start, "h:mm a"),
+        duration: service.durationMin,
+        phone: input.customerPhone,
+      });
+    } catch (emailError) {
+      // Log error but don't fail the booking
+      // The appointment is already created in Google Calendar
+      console.error("Failed to send confirmation email:", emailError);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     eventId: resp.data.id,
     startTimeISO: start.toISOString(),
-    endTimeISO: end.toISOString()
+    endTimeISO: end.toISOString(),
+    emailSent: isEmailConfigured() && !!input.customerEmail
   });
 }
 

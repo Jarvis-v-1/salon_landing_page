@@ -31,7 +31,7 @@ export async function GET() {
     // Test connection for each employee's calendar
     for (const employeeId of employeeIds) {
       try {
-        const calendarId = getCalendarIdForEmployee(employeeId);
+        const calendarId = await getCalendarIdForEmployee(employeeId);
         await calendar.calendars.get({ calendarId });
         results[employeeId] = true;
       } catch (error) {

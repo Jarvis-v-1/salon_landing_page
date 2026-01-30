@@ -1,8 +1,15 @@
 import { addMinutes, format, isAfter, isBefore, parse } from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { SALON_TIMEZONE } from "./googleCalendar";
 
 export function parseHHmm(date: Date, hhmm: string): Date {
-  // Parses a local time (HH:mm) onto the given date in server local timezone.
-  return parse(hhmm, "HH:mm", date);
+  // Parses a local time (HH:mm) in Eastern Time zone onto the given date.
+  // First, get the date in Eastern Time zone
+  const dateInET = toZonedTime(date, SALON_TIMEZONE);
+  // Parse the time string in the context of that date
+  const parsed = parse(hhmm, "HH:mm", dateInET);
+  // Convert back to UTC (which is what Date objects represent internally)
+  return fromZonedTime(parsed, SALON_TIMEZONE);
 }
 
 export function formatHHmm(date: Date): string {
