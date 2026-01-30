@@ -8,6 +8,7 @@ import { buildSlots, overlap, parseHHmm } from "../../../lib/time";
 import {
   getCalendarClient,
   getCalendarId,
+  getCalendarIdForEmployee,
   hasCalendarConfig,
   SALON_TIMEZONE
 } from "../../../lib/googleCalendar";
