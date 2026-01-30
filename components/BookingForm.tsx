@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format, parseISO } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { EMPLOYEES } from "../lib/employees";
 import { SERVICES } from "../lib/services";
 import { getEmployeesForService } from "../lib/serviceEmployeeMapping";
 import { useCalendarInit } from "../lib/hooks/useCalendarInit";
+
+const EST_TIMEZONE = "America/New_York";
 
 type AvailabilityResponse =
   | {
@@ -152,7 +155,7 @@ export function BookingForm() {
     availability && availability.ok
       ? availability.availableSlots.map((s) => ({
           value: s.startTimeISO,
-          label: format(parseISO(s.startTimeISO), "h:mm a"),
+          label: formatInTimeZone(parseISO(s.startTimeISO), EST_TIMEZONE, "h:mm a"),
           employees: s.availableEmployees
         }))
       : [];
@@ -370,7 +373,7 @@ export function BookingForm() {
             <p className="mb-2">
               Your appointment is scheduled for{" "}
               <span className="font-medium">
-                {format(parseISO(submitState.startTimeISO), "MMM d, yyyy · h:mm a")}
+                {formatInTimeZone(parseISO(submitState.startTimeISO), EST_TIMEZONE, "MMM d, yyyy · h:mm a")}
               </span>
               .
             </p>

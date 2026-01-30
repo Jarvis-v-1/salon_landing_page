@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { addMinutes, parseISO, startOfDay, endOfDay, format } from "date-fns";
+import { addMinutes, startOfDay, endOfDay, format } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
+import { parseISO } from "date-fns";
 import { createAppointmentSchema } from "../../../lib/validation";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
 import { getServiceById } from "../../../lib/services";
 import { getBusinessHoursForDay } from "../../../lib/businessHours";
-import { overlap, parseHHmm } from "../../../lib/time";
+import { overlap, parseHHmm, parseDateInEST } from "../../../lib/time";
 import {
   getCalendarClient,
   getCalendarIdForEmployee,
@@ -28,10 +29,10 @@ async function employeeHasConflict(params: {
   // Use the employee's specific calendar ID
   const calendarId = await getCalendarIdForEmployee(employeeId);
 
-  // Get the date in Eastern Time zone, then get start/end of day in ET
-  const dateInET = toZonedTime(parseISO(dateISO + "T00:00:00Z"), SALON_TIMEZONE);
-  const dayStartET = startOfDay(dateInET);
-  const dayEndET = endOfDay(dateInET);
+  // Parse date in EST timezone to avoid day shifts
+  const dateInET = parseDateInEST(dateISO);
+  const dayStartET = startOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
+  const dayEndET = endOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
   // Convert back to UTC for Google Calendar API (which expects UTC)
   const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
   const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
@@ -83,7 +84,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const day = parseISO(input.date);
+  // Parse date in EST timezone to avoid day shifts
+  const day = parseDateInEST(input.date);
   const hours = getBusinessHoursForDay(day.getDay());
   if (hours.closed) {
     return NextResponse.json({ ok: false, error: "SALON_CLOSED" }, { status: 400 });
@@ -140,12 +142,16 @@ export async function POST(req: Request) {
 
   // If calendar is not configured yet, return a friendly error for now.
   if (!hasCalendarConfig()) {
+    const isVercel = process.env.VERCEL === "1";
+    const envHint = isVercel
+      ? "Add them in Vercel Dashboard → Your Project → Settings → Environment Variables. Note: GitHub secrets are NOT automatically used by Vercel - you must add them separately in Vercel."
+      : "Add them in your .env.local file for local development.";
+    
     return NextResponse.json(
       {
         ok: false,
         error: "CALENDAR_NOT_CONFIGURED",
-        message:
-          "Google Calendar is not configured on the server yet. Add GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY in .env.local."
+        message: `Google Calendar is not configured. Missing required environment variables: GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY${process.env.GOOGLE_CALENDAR_ID ? "" : ", GOOGLE_CALENDAR_ID"}. ${envHint}`
       },
       { status: 500 }
     );

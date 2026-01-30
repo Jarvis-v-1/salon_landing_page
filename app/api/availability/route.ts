@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { parseISO, startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { availabilityQuerySchema } from "../../../lib/validation";
 import { getServiceById } from "../../../lib/services";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
 import { getBusinessHoursForDay } from "../../../lib/businessHours";
-import { buildSlots, overlap, parseHHmm } from "../../../lib/time";
+import { buildSlots, overlap, parseHHmm, parseDateInEST } from "../../../lib/time";
 import {
   getCalendarClient,
   getCalendarId,
@@ -28,10 +28,10 @@ async function fetchBusyBlocks(
   if (!hasCalendarConfig()) return [];
   const calendar = getCalendarClient();
 
-  // Get the date in Eastern Time zone, then get start/end of day in ET
-  const dateInET = toZonedTime(parseISO(dateISO + "T00:00:00Z"), SALON_TIMEZONE);
-  const dayStartET = startOfDay(dateInET);
-  const dayEndET = endOfDay(dateInET);
+  // Parse date in EST timezone to avoid day shifts
+  const dateInET = parseDateInEST(dateISO);
+  const dayStartET = startOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
+  const dayEndET = endOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
   // Convert back to UTC for Google Calendar API (which expects UTC)
   const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
   const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
@@ -101,7 +101,8 @@ export async function GET(req: Request) {
   }
 
   const { date, serviceId, employeeId } = parsed.data;
-  const day = parseISO(date);
+  // Parse date in EST timezone to avoid day shifts
+  const day = parseDateInEST(date);
   const hours = getBusinessHoursForDay(day.getDay());
   if (hours.closed) {
     return NextResponse.json({

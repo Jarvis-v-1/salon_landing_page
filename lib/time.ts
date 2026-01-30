@@ -2,6 +2,28 @@ import { addMinutes, format, isAfter, isBefore, parse } from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { SALON_TIMEZONE } from "./googleCalendar";
 
+/**
+ * Parse a date string (YYYY-MM-DD) as a date in EST timezone at midnight EST.
+ * This ensures the date doesn't shift when converted between timezones.
+ */
+export function parseDateInEST(dateString: string): Date {
+  // Parse the date string parts
+  const [year, month, day] = dateString.split("-").map(Number);
+  // Create a date object with the year/month/day
+  // We'll create it at a neutral time (noon) to avoid DST edge cases at midnight
+  const dateObj = new Date(year, month - 1, day, 12, 0, 0, 0);
+  // Get what time this represents in EST
+  const estTime = toZonedTime(dateObj, SALON_TIMEZONE);
+  // Now set it to midnight in EST (same year/month/day, but 00:00:00)
+  estTime.setFullYear(year, month - 1, day);
+  estTime.setHours(0, 0, 0, 0);
+  estTime.setMinutes(0, 0, 0);
+  estTime.setSeconds(0, 0);
+  estTime.setMilliseconds(0);
+  // Convert from EST (midnight on the specified date) to UTC
+  return fromZonedTime(estTime, SALON_TIMEZONE);
+}
+
 export function parseHHmm(date: Date, hhmm: string): Date {
   // Parses a local time (HH:mm) in Eastern Time zone onto the given date.
   // First, get the date in Eastern Time zone
