@@ -174,21 +174,25 @@ export function BookingForm() {
   }, [availability, watch, employeeId, setValue]);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-purple-dark/80 to-purple-black/80 p-8 backdrop-blur-sm shadow-xl sm:p-10">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div className="relative overflow-hidden rounded-2xl bg-white p-8 shadow-elegant border border-gold/20 sm:p-10">
+      {/* Decorative Corner Elements */}
+      <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-gold/20 rounded-tl-2xl" />
+      <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-gold/20 rounded-br-2xl" />
+
+      <div className="relative flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-medium uppercase tracking-[0.16em] text-white/80 backdrop-blur-sm">
+          <p className="inline-flex items-center gap-2 rounded-full bg-maroon/5 border border-maroon/20 px-4 py-1 text-xs font-medium uppercase tracking-[0.16em] text-maroon">
             Book online
           </p>
-          <h3 className="mt-3 font-display text-2xl text-white sm:text-3xl">Schedule an appointment</h3>
-          <p className="mt-1 text-sm text-white/70">
+          <h3 className="mt-3 font-display text-2xl text-maroon sm:text-3xl font-bold">Schedule an appointment</h3>
+          <p className="mt-1 text-sm text-maroon-700/70">
             Pick a date and time — we'll only show slots that are free for the selected stylist.
           </p>
         </div>
-        <div className="text-xs text-white/60">
-          <p className="font-medium text-white/80">Prefer WhatsApp?</p>
+        <div className="text-xs text-maroon-700/60">
+          <p className="font-medium text-maroon">Prefer WhatsApp?</p>
           <a
-            className="underline decoration-soft-gold/40 underline-offset-4 hover:text-soft-gold"
+            className="underline decoration-gold underline-offset-4 hover:text-gold transition-colors"
             href="https://wa.me/17705591521"
             target="_blank"
             rel="noreferrer"
@@ -201,13 +205,13 @@ export function BookingForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Service</span>
+            <span className="text-sm font-medium text-maroon">Service</span>
             <select
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none ring-0 backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon outline-none ring-0 focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               {...register("serviceId", { required: true })}
             >
               {SERVICES.map((s) => (
-                <option key={s.id} value={s.id} className="bg-purple-black text-white">
+                <option key={s.id} value={s.id} className="bg-cream text-maroon">
                   {s.label} · {s.durationMin} min
                 </option>
               ))}
@@ -215,10 +219,10 @@ export function BookingForm() {
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Date</span>
+            <span className="text-sm font-medium text-maroon">Date</span>
             <input
               type="date"
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15 [&::-webkit-calendar-picker-indicator]:invert"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               {...register("date", { required: true })}
             />
           </label>
@@ -226,14 +230,14 @@ export function BookingForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Preferred stylist (optional)</span>
+            <span className="text-sm font-medium text-maroon">Preferred stylist (optional)</span>
             <select
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               {...register("employeeId")}
             >
-              <option value="" className="bg-purple-black text-white">Auto-assign (recommended)</option>
+              <option value="" className="bg-cream text-maroon">Auto-assign (recommended)</option>
               {availableEmployees.map((e) => (
-                <option key={e.id} value={e.id} className="bg-purple-black text-white">
+                <option key={e.id} value={e.id} className="bg-cream text-maroon">
                   {e.name} · {e.role}
                 </option>
               ))}
@@ -241,13 +245,15 @@ export function BookingForm() {
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Time</span>
+            <span className="text-sm font-medium text-maroon">
+              Time <span className="text-xs font-normal text-maroon-700/60">(EST timezone)</span>
+            </span>
             <select
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               {...register("startTimeISO", { required: true })}
               disabled={loadingSlots || !availability || (availability.ok && availability.closed)}
             >
-              <option value="" className="bg-purple-black text-white">
+              <option value="" className="bg-cream text-maroon">
                 {loadingSlots
                   ? "Loading slots..."
                   : availability && availability.ok && availability.closed
@@ -255,14 +261,14 @@ export function BookingForm() {
                     : "Select a time"}
               </option>
               {slotOptions.map((s) => (
-                <option key={s.value} value={s.value} className="bg-purple-black text-white">
+                <option key={s.value} value={s.value} className="bg-cream text-maroon">
                   {s.label}
                 </option>
               ))}
             </select>
             {availability && availability.ok && !availability.closed ? (
-              <p className="text-xs text-white/60">
-                Duration: <span className="font-medium text-white">{service.durationMin} min</span>
+              <p className="text-xs text-maroon-700/60">
+                Duration: <span className="font-medium text-maroon">{service.durationMin} min</span>
               </p>
             ) : null}
           </label>
@@ -270,45 +276,45 @@ export function BookingForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Your name</span>
+            <span className="text-sm font-medium text-maroon">Your name</span>
             <input
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon placeholder:text-maroon/40 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               placeholder="Your full name"
               {...register("customerName", { required: "Name is required" })}
             />
             {errors.customerName ? (
-              <span className="text-xs text-red-400">{errors.customerName.message}</span>
+              <span className="text-xs text-red-600">{errors.customerName.message}</span>
             ) : null}
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Phone</span>
+            <span className="text-sm font-medium text-maroon">Phone</span>
             <input
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon placeholder:text-maroon/40 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               placeholder="(770) 559-1521"
               {...register("customerPhone", { required: "Phone is required" })}
             />
             {errors.customerPhone ? (
-              <span className="text-xs text-red-400">{errors.customerPhone.message}</span>
+              <span className="text-xs text-red-600">{errors.customerPhone.message}</span>
             ) : null}
           </label>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Email (optional)</span>
+            <span className="text-sm font-medium text-maroon">Email (optional)</span>
             <input
               type="email"
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon placeholder:text-maroon/40 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               placeholder="you@example.com"
               {...register("customerEmail")}
             />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-white">Notes (optional)</span>
+            <span className="text-sm font-medium text-maroon">Notes (optional)</span>
             <input
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none backdrop-blur-sm focus:border-soft-gold/50 focus:bg-white/15"
+              className="rounded-xl border border-maroon/20 bg-cream px-4 py-3 text-sm text-maroon placeholder:text-maroon/40 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
               placeholder="Anything we should know?"
               {...register("notes")}
             />
@@ -316,13 +322,13 @@ export function BookingForm() {
         </div>
 
         {submitState.status === "error" ? (
-          <div className="rounded-2xl border border-red-400/30 bg-red-500/20 px-4 py-3 text-sm text-red-200 backdrop-blur-sm">
+          <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
             {submitState.message}
           </div>
         ) : null}
 
         {submitState.status === "success" ? (
-          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/20 px-4 py-3 text-sm text-emerald-200 backdrop-blur-sm">
+          <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             Appointment requested for{" "}
             <span className="font-medium">
               {format(parseISO(submitState.startTimeISO), "MMM d, yyyy · h:mm a")}
@@ -332,12 +338,12 @@ export function BookingForm() {
         ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-white/60">
+          <p className="text-xs text-maroon-700/60">
             We prevent double booking per stylist. Different stylists can be booked at the same time.
           </p>
           <button
             type="submit"
-            className="rounded-full bg-soft-gold px-8 py-3 text-sm font-semibold text-purple-black transition-all hover:bg-soft-gold/90 hover:shadow-lg disabled:opacity-50"
+            className="rounded-full bg-gold px-8 py-3 text-sm font-bold text-maroon-900 shadow-gold transition-all hover:bg-gold-light hover:scale-105 disabled:opacity-50"
             disabled={submitState.status === "submitting"}
           >
             {submitState.status === "submitting" ? "Booking..." : "Confirm Booking"}

@@ -1,60 +1,166 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
+  { href: "#home", label: "Home" },
   { href: "#services", label: "Services" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "#pricing", label: "Menu" },
   { href: "#why-us", label: "Why Us" },
-  { href: "#location", label: "Location" },
   { href: "#contact", label: "Contact" }
 ];
 
 export function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 w-full">
-      <div className="mx-auto w-full max-w-7xl px-6 pt-4 sm:px-8 lg:px-12 xl:px-16">
-        <nav className="flex items-center justify-between rounded-full border border-white/20 bg-purple-black/80 backdrop-blur-xl px-4 py-2 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-xs font-semibold tracking-[0.2em] text-white backdrop-blur-sm">
-              SH
-            </div>
-            <div>
-              <p className="font-display text-sm font-semibold tracking-wide text-white">
-                Swapna Beauty Parlour
-              </p>
-              <p className="text-xs text-white/70">
-                Luxury Hair &amp; Beauty Studio
-              </p>
-            </div>
-          </div>
-          <div className="hidden items-center gap-6 text-sm font-medium text-white/90 md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="transition hover:text-white"
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+          isScrolled
+            ? "bg-maroon/95 backdrop-blur-md shadow-elegant py-2"
+            : "bg-transparent py-4"
+        }`}
+      >
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+          <nav className="flex items-center justify-between">
+            {/* Logo - Only visible when scrolled */}
+            <Link href="#home" className="flex items-center group">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isScrolled ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+                className={`relative h-10 sm:h-12 w-auto transition-transform duration-300 group-hover:scale-105 ${!isScrolled ? 'pointer-events-none' : ''}`}
               >
-                {link.label}
-              </a>
-            ))}
-          </div>
-          <div className="hidden gap-3 md:flex">
-            <Link
-              href="https://wa.me/17705591521"
-              target="_blank"
-              className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:border-white/50"
-            >
-              Book on WhatsApp
+                <Image
+                  src="/Logo.png"
+                  alt="Swapna Beauty Parlour"
+                  width={180}
+                  height={48}
+                  className="h-10 sm:h-12 w-auto object-contain"
+                  priority
+                />
+              </motion.div>
             </Link>
-            <Link
-              href="tel:7705591521"
-              className="rounded-full border-2 border-white bg-transparent px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-white/10"
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={`relative px-4 py-2 text-sm font-medium tracking-wide transition-colors duration-300 group ${
+                    isScrolled
+                      ? "text-cream/90 hover:text-gold"
+                      : "text-cream hover:text-gold"
+                  }`}
+                >
+                  {link.label}
+                  <span className="absolute bottom-0 left-1/2 h-0.5 w-0 bg-gold transition-all duration-300 group-hover:left-4 group-hover:w-[calc(100%-2rem)]" />
+                </a>
+              ))}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="hidden md:flex items-center gap-3">
+              <Link
+                href="https://wa.me/17705591521"
+                target="_blank"
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border-2 ${
+                  isScrolled
+                    ? "border-gold text-gold hover:bg-gold hover:text-maroon"
+                    : "border-gold/80 text-gold hover:bg-gold hover:text-maroon"
+                }`}
+              >
+                Book Now
+              </Link>
+              <Link
+                href="tel:7705591521"
+                className="px-5 py-2.5 rounded-full bg-gold text-maroon-900 text-sm font-semibold shadow-gold transition-all duration-300 hover:bg-gold-light hover:scale-105"
+              >
+                Call Now
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                isScrolled ? "text-cream" : "text-cream"
+              }`}
+              aria-label="Toggle menu"
             >
-              Call Now
-            </Link>
-          </div>
-        </nav>
-      </div>
-    </header>
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-x-0 top-0 z-40 pt-20 md:hidden"
+          >
+            <div className="bg-maroon/98 backdrop-blur-lg border-b border-gold/20 shadow-elegant-lg">
+              <div className="px-4 py-6 space-y-4">
+                {NAV_LINKS.map((link, index) => (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="block px-4 py-3 text-cream font-medium text-lg border-b border-gold/10 hover:text-gold hover:pl-6 transition-all duration-300"
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
+                <div className="flex flex-col gap-3 pt-4">
+                  <Link
+                    href="https://wa.me/17705591521"
+                    target="_blank"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full py-3 text-center rounded-full border-2 border-gold text-gold font-semibold hover:bg-gold hover:text-maroon transition-all duration-300"
+                  >
+                    Book on WhatsApp
+                  </Link>
+                  <Link
+                    href="tel:7705591521"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full py-3 text-center rounded-full bg-gold text-maroon-900 font-semibold shadow-gold hover:bg-gold-light transition-all duration-300"
+                  >
+                    Call Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

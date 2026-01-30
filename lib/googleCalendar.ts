@@ -2,7 +2,7 @@ import { google } from "googleapis";
 import type { EmployeeId } from "./employees";
 import { EMPLOYEES } from "./employees";
 
-export const SALON_TIMEZONE = "America/Los_Angeles";
+export const SALON_TIMEZONE = "America/New_York";
 
 function getEnv(name: string): string {
   const v = process.env[name];

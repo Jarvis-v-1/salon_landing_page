@@ -1,13 +1,15 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Scissors, Sparkles, Eye, User, Flower2, Sun, ScissorsLineDashed } from "lucide-react";
 import { useState } from "react";
+import { LucideIcon } from "lucide-react";
+import Image from "next/image";
 
 interface ServiceCategory {
   id: string;
   title: string;
-  icon: string;
+  icon: LucideIcon;
   services: string[];
 }
 
@@ -15,7 +17,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "face-threading",
     title: "Face Threading",
-    icon: "🧵",
+    icon: Sparkles,
     services: [
       "Eyebrows",
       "Upperlip",
@@ -32,7 +34,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "face-waxing",
     title: "Face Waxing",
-    icon: "✨",
+    icon: Flower2,
     services: [
       "Eyebrows",
       "Upperlip",
@@ -49,7 +51,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "lashes-tint",
     title: "Lashes and Tint",
-    icon: "👁️",
+    icon: Eye,
     services: [
       "Eyebrows filling",
       "Eyelashes strips",
@@ -62,7 +64,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "body-waxing",
     title: "Body Waxing",
-    icon: "💆",
+    icon: User,
     services: [
       "Underarm waxing",
       "Half arm waxing",
@@ -79,7 +81,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "facials",
     title: "Facials",
-    icon: "✨",
+    icon: Sun,
     services: [
       "Quick facial",
       "Basic cleanup",
@@ -110,7 +112,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "bleach",
     title: "Face and Body Bleach",
-    icon: "🌟",
+    icon: Sparkles,
     services: [
       "Face bleach",
       "Full face, neck, half back",
@@ -122,7 +124,7 @@ const serviceCategories: ServiceCategory[] = [
   {
     id: "hair-care",
     title: "Hair Care and Cuts",
-    icon: "✂️",
+    icon: Scissors,
     services: [
       "Kids basic haircut",
       "Mens haircut",
@@ -148,28 +150,51 @@ function ServiceAccordionItem({
   category,
   isOpen,
   onToggle,
+  index,
 }: {
   category: ServiceCategory;
   isOpen: boolean;
   onToggle: () => void;
+  index: number;
 }) {
+  const Icon = category.icon;
+  
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-dark/60 to-purple-black/80 backdrop-blur-sm transition-all hover:border-white/20 hover:shadow-lg">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className={`overflow-hidden rounded-xl border transition-all duration-300 ${
+        isOpen
+          ? "border-gold bg-white shadow-elegant"
+          : "border-maroon/10 bg-white/80 hover:border-gold/50 hover:shadow-soft"
+      }`}
+    >
       <button
         onClick={onToggle}
-        className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-white/5"
+        className="flex w-full items-center justify-between p-5 text-left transition-colors"
       >
         <div className="flex items-center gap-4">
-          <span className="text-3xl">{category.icon}</span>
-          <h3 className="font-serif text-xl font-semibold text-white sm:text-2xl">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 ${
+            isOpen ? "bg-gold/20" : "bg-maroon/5"
+          }`}>
+            <Icon className={`w-6 h-6 ${isOpen ? "text-gold" : "text-maroon"}`} />
+          </div>
+          <h3 className={`font-display text-xl font-semibold transition-colors duration-300 ${
+            isOpen ? "text-maroon" : "text-maroon-800"
+          }`}>
             {category.title}
           </h3>
         </div>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
+          className={`p-2 rounded-full transition-colors duration-300 ${
+            isOpen ? "bg-gold text-maroon-900" : "bg-maroon/5 text-maroon"
+          }`}
         >
-          <ChevronDown className="h-6 w-6 text-white/60" />
+          <ChevronDown className="h-5 w-5" />
         </motion.div>
       </button>
 
@@ -182,17 +207,17 @@ function ServiceAccordionItem({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/10 bg-purple-black/40 p-6">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {category.services.map((service, index) => (
+            <div className="border-t border-gold/20 bg-cream/50 p-5">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {category.services.map((service, idx) => (
                   <motion.div
                     key={service}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                    transition={{ delay: idx * 0.02 }}
+                    className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 text-sm text-maroon-800 border border-maroon/5 hover:border-gold/30 hover:bg-gold/5 transition-all duration-300"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-soft-gold" />
+                    <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
                     <span>{service}</span>
                   </motion.div>
                 ))}
@@ -201,7 +226,7 @@ function ServiceAccordionItem({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -221,77 +246,93 @@ export function Pricing() {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="relative overflow-hidden">
+      {/* Decorative Mandala - Left Edge (Half visible, behind content) */}
+      <div className="absolute top-1/4 -left-[280px] lg:-left-[350px] w-[560px] h-[560px] lg:w-[700px] lg:h-[700px] opacity-[0.05] pointer-events-none -z-10">
+        <Image
+          src="/decorator.png"
+          alt=""
+          fill
+          className="object-contain"
+        />
+      </div>
+
+      {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="space-y-3 text-center"
+        className="text-center mb-12"
       >
-        <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-medium uppercase tracking-[0.16em] text-white/80 backdrop-blur-sm">
-          Our Services
+        {/* Decorative Element */}
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold" />
+          <div className="w-3 h-3 rotate-45 border-2 border-gold" />
+          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold" />
+        </div>
+
+        <p className="inline-block px-6 py-2 rounded-full bg-maroon/5 border border-maroon/20 text-maroon text-sm font-medium uppercase tracking-[0.2em] mb-4">
+          Our Menu
         </p>
-        <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+        
+        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-maroon mb-6">
           Premium Beauty Services
         </h2>
-        <p className="mx-auto max-w-2xl text-sm text-white/70 sm:text-base">
-          Explore our complete range of services. Click on any category to view
-          all available options. Pricing varies based on service and
-          requirements.
+        
+        <p className="max-w-2xl mx-auto text-maroon-700/70 text-lg">
+          Explore our complete range of services. Click on any category to view all available options.
         </p>
+
+        {/* Bottom Decorative Element */}
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="w-2 h-2 rounded-full bg-gold" />
+          <div className="h-px w-24 bg-gold" />
+          <div className="w-3 h-3 rounded-full border-2 border-gold" />
+          <div className="h-px w-24 bg-gold" />
+          <div className="w-2 h-2 rounded-full bg-gold" />
+        </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-4"
-      >
+      {/* Accordion List */}
+      <div className="space-y-3">
         {serviceCategories.map((category, index) => (
-          <motion.div
+          <ServiceAccordionItem
             key={category.id}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
-            <ServiceAccordionItem
-              category={category}
-              isOpen={openCategories.has(category.id)}
-              onToggle={() => toggleCategory(category.id)}
-            />
-          </motion.div>
+            category={category}
+            isOpen={openCategories.has(category.id)}
+            onToggle={() => toggleCategory(category.id)}
+            index={index}
+          />
         ))}
-      </motion.div>
+      </div>
 
+      {/* Contact CTA */}
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="rounded-2xl border border-white/10 bg-gradient-to-br from-purple-dark/40 to-purple-black/60 p-6 text-center backdrop-blur-sm"
+        className="mt-10 rounded-xl bg-maroon p-6 text-center border border-gold/20"
       >
-        <p className="text-sm text-white/70">
+        <p className="text-cream/90">
           For detailed pricing and to book an appointment, please{" "}
           <a
             href="https://wa.me/17705591521"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-soft-gold transition-colors hover:text-soft-gold/80"
+            className="font-semibold text-gold hover:text-gold-light transition-colors underline underline-offset-2"
           >
             message us on WhatsApp
           </a>{" "}
           or{" "}
           <a
             href="tel:7705591521"
-            className="font-semibold text-soft-gold transition-colors hover:text-soft-gold/80"
+            className="font-semibold text-gold hover:text-gold-light transition-colors underline underline-offset-2"
           >
             call us
           </a>
-          . Prices may vary based on hair length, skin needs, and service
-          requirements.
+          . Prices may vary based on hair length, skin needs, and service requirements.
         </p>
       </motion.div>
     </section>

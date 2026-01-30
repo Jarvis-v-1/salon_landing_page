@@ -14,17 +14,25 @@ export default function HomePage() {
         <Hero />
       </section>
 
-      <div className="relative w-full bg-gradient-to-b from-purple-black via-purple-dark to-purple-black">
-        <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-12 xl:px-16">
+      <div className="relative w-full">
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 mandala-pattern opacity-30 pointer-events-none" />
+        
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-24 sm:space-y-32 py-20">
             <section id="trust">
               <Trust />
             </section>
+          </div>
+        </div>
 
-            <section id="services">
-              <Services />
-            </section>
+        {/* Full-width Services Section */}
+        <section id="services" className="w-full">
+          <Services />
+        </section>
 
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="space-y-24 sm:space-y-32 py-20">
             <section id="pricing">
               <Pricing />
             </section>
@@ -43,8 +51,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <section className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 pb-20">
-          <FinalCtaStrip />
+        <section className="w-full px-4 sm:px-6 lg:px-8 pb-20">
+          <div className="max-w-7xl mx-auto">
+            <FinalCtaStrip />
+          </div>
         </section>
       </div>
     </div>
