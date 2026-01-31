@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Phone, MessageCircle, Clock, MapPin } from "lucide-react";
 import { BookingForm } from "./BookingForm";
+import { CallNowButton } from "./CallNowButton";
 
 export function Contact() {
   const phoneNumber = "770-559-1521";
@@ -165,13 +166,11 @@ export function Contact() {
           <MessageCircle className="h-5 w-5" />
           Book on WhatsApp
         </a>
-        <a
-          href={`tel:${phoneNumber.replace(/-/g, "")}`}
-          className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-full border-2 border-maroon text-maroon font-semibold hover:bg-maroon hover:text-cream transition-all duration-300"
-        >
-          <Phone className="h-5 w-5" />
-          Call Now
-        </a>
+        <CallNowButton
+          variant="outline"
+          showIcon={true}
+          className="w-full sm:w-auto"
+        />
       </motion.div>
     </section>
   );

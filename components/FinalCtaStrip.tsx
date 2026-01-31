@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Phone, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import Image from "next/image";
+import { CallNowButton } from "./CallNowButton";
 
 export function FinalCtaStrip() {
   const phoneNumber = "770-559-1521";
@@ -83,15 +84,11 @@ export function FinalCtaStrip() {
             <MessageCircle className="h-5 w-5" />
             Book on WhatsApp
           </motion.a>
-          <motion.a
-            href={`tel:${phoneNumber.replace(/-/g, "")}`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-full border-2 border-cream text-cream font-semibold hover:bg-cream/10 transition-all duration-300"
-          >
-            <Phone className="h-5 w-5" />
-            Call Now
-          </motion.a>
+          <CallNowButton
+            variant="secondary"
+            showIcon={true}
+            className="w-full sm:w-auto"
+          />
         </div>
       </div>
     </motion.section>

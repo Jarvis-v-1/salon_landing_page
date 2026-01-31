@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { CallNowButton } from "./CallNowButton";
 
 const NAV_LINKS = [
   { href: "#home", label: "Home" },
@@ -87,12 +88,7 @@ export function Navbar() {
               >
                 Book Now
               </Link>
-              <Link
-                href="tel:7705591521"
-                className="px-5 py-2.5 rounded-full bg-gold text-maroon-900 text-sm font-semibold shadow-gold transition-all duration-300 hover:bg-gold-light hover:scale-105"
-              >
-                Call Now
-              </Link>
+              <CallNowButton variant="nav" showIcon={false} />
             </div>
 
             {/* Mobile Menu Button */}
@@ -147,13 +143,11 @@ export function Navbar() {
                   >
                     Book on WhatsApp
                   </Link>
-                  <Link
-                    href="tel:7705591521"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                  <CallNowButton
+                    variant="primary"
+                    showIcon={false}
                     className="w-full py-3 text-center rounded-full bg-gold text-maroon-900 font-semibold shadow-gold hover:bg-gold-light transition-all duration-300"
-                  >
-                    Call Now
-                  </Link>
+                  />
                 </div>
               </div>
             </div>

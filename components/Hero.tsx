@@ -3,10 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { CallNowButton } from "./CallNowButton";
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen w-full overflow-hidden">
+    <section className="relative h-screen min-h-[600px] max-h-[1200px] w-full overflow-hidden">
       {/* Maroon Background */}
       <div className="absolute inset-0 bg-maroon-gradient" />
 
@@ -30,24 +31,24 @@ export function Hero() {
         />
       </div>
 
-      {/* Content Container */}
-      <div className="relative z-10 w-full min-h-screen flex items-center">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      {/* Content Container - Dynamic height fitting */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-center">
+        <div className="w-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-4 lg:py-[clamp(1rem,3vh,3rem)]">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-center">
             
             {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-center lg:text-left space-y-6"
+              className="text-center lg:text-left space-y-5 lg:space-y-[clamp(0.5rem,1.5vh,1.5rem)]"
             >
               {/* Logo - Large and Prominent */}
               <motion.div
                 initial={{ opacity: 0, y: -30, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                className="-mt-4 mb-8"
+                className="mb-4 lg:mb-[clamp(0.5rem,2vh,2rem)]"
               >
                 <div className="relative inline-block lg:text-left text-center">
                   <Image
@@ -55,7 +56,7 @@ export function Hero() {
                     alt="Swapna Beauty Parlour"
                     width={500}
                     height={150}
-                    className="relative w-[280px] sm:w-[350px] lg:w-[420px] xl:w-[500px] h-auto object-contain"
+                    className="relative w-[280px] sm:w-[320px] lg:w-[clamp(200px,25vw,500px)] h-auto object-contain"
                     priority
                   />
                 </div>
@@ -66,7 +67,7 @@ export function Hero() {
                 initial={{ width: 0 }}
                 animate={{ width: "5rem" }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="hidden lg:block h-0.5 bg-gradient-to-r from-gold to-gold-light mb-6"
+                className="hidden lg:block h-0.5 bg-gradient-to-r from-gold to-gold-light mb-[clamp(0.25rem,1vh,1.5rem)]"
               />
 
               {/* Main Headline */}
@@ -74,7 +75,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-cream leading-tight"
+                className="font-display text-[2.75rem] leading-[1.1] sm:text-5xl lg:text-[clamp(2rem,5vw,4.5rem)] font-bold text-cream lg:leading-tight"
               >
                 Feel Beautiful.
                 <br />
@@ -86,7 +87,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="text-cream/80 text-base sm:text-lg max-w-xl mx-auto lg:mx-0"
+                className="text-cream/80 text-base sm:text-lg lg:text-[clamp(0.875rem,1.5vw,1.125rem)] max-w-xl mx-auto lg:mx-0 leading-relaxed"
               >
                 Transform your beauty at our luxury salon in Duluth, GA. Expert
                 stylists, premium services, and personalized care for every visit.
@@ -97,7 +98,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
-                className="inline-flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-full px-5 py-2.5"
+                className="inline-flex items-center gap-2.5 bg-gold/10 border border-gold/30 rounded-full px-5 py-2.5"
               >
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -106,7 +107,7 @@ export function Hero() {
                     </svg>
                   ))}
                 </div>
-                <span className="text-cream font-semibold">4.9</span>
+                <span className="text-cream font-semibold text-base">4.9</span>
                 <span className="text-cream/60 text-sm">on Google</span>
               </motion.div>
 
@@ -115,7 +116,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.6 }}
-                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4"
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2 lg:pt-[clamp(0.25rem,1vh,1rem)]"
               >
                 <Link
                   href="#contact"
@@ -123,12 +124,11 @@ export function Hero() {
                 >
                   Book Appointment
                 </Link>
-                <Link
-                  href="tel:7705591521"
+                <CallNowButton
+                  variant="secondary"
+                  showIcon={false}
                   className="w-full sm:w-auto px-8 py-4 border-2 border-cream/50 text-cream font-semibold rounded-full hover:bg-cream/10 hover:border-cream transition-all duration-300 text-center"
-                >
-                  Call Now
-                </Link>
+                />
               </motion.div>
             </motion.div>
 
@@ -145,13 +145,13 @@ export function Hero() {
                 <div className="absolute w-[85%] h-[85%] border border-gold/20 rounded-3xl transform -rotate-2" />
               </div>
               
-              {/* Main Image Container */}
-              <div className="relative w-full aspect-[3/4] max-w-md rounded-2xl overflow-hidden border-4 border-gold/40 shadow-elegant-lg">
+              {/* Main Image Container - Dynamic portrait ratio */}
+              <div className="relative w-[clamp(240px,28vw,380px)] h-[clamp(320px,60vh,580px)] rounded-2xl overflow-hidden border-4 border-gold/40 shadow-elegant-lg">
                 <Image
                   src="/hero-image.webp"
                   alt="Swapna Beauty Parlour - Luxury Beauty Services"
                   fill
-                  className="object-cover object-center"
+                  className="object-cover object-top"
                   priority
                   sizes="(max-width: 1024px) 0vw, 40vw"
                 />
@@ -175,7 +175,7 @@ export function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
