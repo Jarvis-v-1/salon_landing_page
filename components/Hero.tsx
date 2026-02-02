@@ -1,11 +1,36 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { CallNowButton } from "./CallNowButton";
 
+const heroImages = [
+  "/hero-image.webp",
+  "/gallery/1.jpeg",
+  "/gallery/2.jpg",
+  "/gallery/3.jpg",
+  "/gallery/4.webp",
+  "/gallery/5.webp",
+  "/gallery/6.jpeg",
+];
+
 export function Hero() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % heroImages.length);
+  };
+
   return (
     <section className="relative h-screen min-h-[600px] max-h-[1200px] w-full overflow-hidden">
       {/* Background */}
@@ -115,36 +140,92 @@ export function Hero() {
               </motion.div>
             </motion.div>
 
-            {/* Right Side - Hero Image */}
+            {/* Right Side - Hero Image Slideshow */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               className="relative hidden lg:flex items-center justify-center"
             >
-              {/* Decorative Frame */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-[90%] h-[90%] border-2 border-royal-blue/10 rounded-3xl transform rotate-3" />
-                <div className="absolute w-[85%] h-[85%] border border-royal-blue/5 rounded-3xl transform -rotate-2" />
+              {/* Decorative Frame - Subtle Ambience */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <motion.div
+                  animate={{ rotate: [3, 6, 3] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-[90%] h-[90%] border-2 border-royal-blue/10 rounded-3xl"
+                />
+                <motion.div
+                  animate={{ rotate: [-2, -5, -2] }}
+                  transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute w-[85%] h-[85%] border border-royal-blue/5 rounded-3xl"
+                />
               </div>
 
-              {/* Main Image Container - Dynamic portrait ratio */}
-              <div className="relative w-[clamp(240px,28vw,380px)] h-[clamp(320px,60vh,580px)] rounded-2xl overflow-hidden border-4 border-white shadow-xl">
-                <Image
-                  src="/hero-image.webp"
-                  alt="Swapna Beauty Parlour - Luxury Beauty Services"
-                  fill
-                  className="object-cover object-top"
-                  priority
-                  sizes="(max-width: 1024px) 0vw, 40vw"
-                />
+              {/* Main Image Container - Dynamic portrait ratio & Floating Animation */}
+              <motion.div
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                onClick={handleNext}
+                className="relative cursor-pointer group w-[clamp(220px,25vw,340px)] h-[clamp(400px,70vh,600px)] rounded-2xl overflow-hidden border-4 border-white shadow-xl bg-gray-100"
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key={currentIndex}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1.2, ease: "easeInOut" }} // Soft smooth slow transition
+                    className="absolute inset-0 w-full h-full"
+                  >
+                    <Image
+                      src={heroImages[currentIndex]}
+                      alt="Swapna Beauty Parlour - Luxury Styles"
+                      fill
+                      className="object-cover object-top"
+                      priority
+                      sizes="(max-width: 1024px) 0vw, 40vw"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-maroon/40 via-transparent to-transparent" />
-              </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-maroon/40 via-transparent to-transparent pointer-events-none" />
+
+                {/* Hover hint logic */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  {/* Could put a 'Next' arrow here if desired, keeping it clean for now */}
+                </div>
+
+                {/* Progress Indicators */}
+                <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
+                  {heroImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentIndex(idx);
+                      }}
+                      className={`h-1 rounded-full transition-all duration-300 ${idx === currentIndex
+                          ? "w-6 bg-white"
+                          : "w-2 bg-white/40 hover:bg-white/70"
+                        }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </motion.div>
 
               {/* Decorative Corner Elements */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 border-t-2 border-r-2 border-soft-gold/30 rounded-tr-2xl" />
-              <div className="absolute -bottom-4 -left-4 w-16 h-16 border-b-2 border-l-2 border-soft-gold/30 rounded-bl-2xl" />
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-4 -right-4 w-16 h-16 border-t-2 border-r-2 border-soft-gold/30 rounded-tr-2xl pointer-events-none"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                className="absolute -bottom-4 -left-4 w-16 h-16 border-b-2 border-l-2 border-soft-gold/30 rounded-bl-2xl pointer-events-none"
+              />
             </motion.div>
           </div>
         </div>
@@ -178,4 +259,3 @@ export function Hero() {
     </section>
   );
 }
-

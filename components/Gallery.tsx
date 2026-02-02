@@ -5,12 +5,12 @@ import Image from "next/image";
 
 // Placeholder images since user will replace them later
 const images = [
-    "/hero-image.webp", // Reusing existing image as placeholder
-    "/hair-style.png",
-    "/hair-color.png",
-    "/bridal.png",
-    "/threading.png",
-    "/facial.png"
+    "/gallery/1.jpeg",
+    "/gallery/2.jpg",
+    "/gallery/3.jpg",
+    "/gallery/4.webp",
+    "/gallery/5.webp",
+    "/gallery/6.jpeg"
 ];
 
 export function Gallery() {
