@@ -1,10 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Scissors, Sparkles, Eye, User, Flower2, Sun, ScissorsLineDashed } from "lucide-react";
+import { ChevronDown, Scissors, Sparkles, Eye, User, Flower2, Sun } from "lucide-react";
 import { useState } from "react";
 import { LucideIcon } from "lucide-react";
-import Image from "next/image";
 
 interface ServiceCategory {
   id: string;
@@ -158,41 +157,37 @@ function ServiceAccordionItem({
   index: number;
 }) {
   const Icon = category.icon;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className={`overflow-hidden rounded-xl border transition-all duration-300 ${
-        isOpen
-          ? "border-gold bg-white shadow-elegant"
-          : "border-maroon/10 bg-white/80 hover:border-gold/50 hover:shadow-soft"
-      }`}
+      className={`overflow-hidden rounded-xl border transition-all duration-300 ${isOpen
+          ? "border-royal-blue/20 bg-white shadow-md"
+          : "border-gray-200 bg-white hover:border-royal-blue/30 hover:shadow-sm"
+        }`}
     >
       <button
         onClick={onToggle}
         className="flex w-full items-center justify-between p-5 text-left transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 ${
-            isOpen ? "bg-gold/20" : "bg-maroon/5"
-          }`}>
-            <Icon className={`w-6 h-6 ${isOpen ? "text-gold" : "text-maroon"}`} />
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 ${isOpen ? "bg-royal-blue/10" : "bg-gray-100"
+            }`}>
+            <Icon className={`w-6 h-6 ${isOpen ? "text-royal-blue" : "text-gray-500"}`} />
           </div>
-          <h3 className={`font-display text-xl font-semibold transition-colors duration-300 ${
-            isOpen ? "text-maroon" : "text-maroon-800"
-          }`}>
+          <h3 className={`font-display text-xl font-semibold transition-colors duration-300 ${isOpen ? "text-royal-blue" : "text-gray-800"
+            }`}>
             {category.title}
           </h3>
         </div>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
-          className={`p-2 rounded-full transition-colors duration-300 ${
-            isOpen ? "bg-gold text-maroon-900" : "bg-maroon/5 text-maroon"
-          }`}
+          className={`p-2 rounded-full transition-colors duration-300 ${isOpen ? "bg-royal-blue text-white" : "bg-gray-100 text-gray-400"
+            }`}
         >
           <ChevronDown className="h-5 w-5" />
         </motion.div>
@@ -207,7 +202,7 @@ function ServiceAccordionItem({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-gold/20 bg-cream/50 p-5">
+            <div className="border-t border-gray-100 bg-gray-50/50 p-5">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {category.services.map((service, idx) => (
                   <motion.div
@@ -215,9 +210,9 @@ function ServiceAccordionItem({
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.02 }}
-                    className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 text-sm text-maroon-800 border border-maroon/5 hover:border-gold/30 hover:bg-gold/5 transition-all duration-300"
+                    className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 text-sm text-gray-700 border border-gray-200 hover:border-royal-blue/20 hover:bg-white transition-all duration-300"
                   >
-                    <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-royal-red flex-shrink-0" />
                     <span>{service}</span>
                   </motion.div>
                 ))}
@@ -246,17 +241,7 @@ export function Pricing() {
   };
 
   return (
-    <section className="relative overflow-hidden">
-      {/* Decorative Mandala - Left Edge (Half visible, behind content) */}
-      <div className="absolute top-1/4 -left-[280px] lg:-left-[350px] w-[560px] h-[560px] lg:w-[700px] lg:h-[700px] opacity-[0.05] pointer-events-none -z-10">
-        <Image
-          src="/decorator.png"
-          alt=""
-          fill
-          className="object-contain"
-        />
-      </div>
-
+    <section className="relative overflow-hidden py-16">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -265,33 +250,17 @@ export function Pricing() {
         transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        {/* Decorative Element */}
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold" />
-          <div className="w-3 h-3 rotate-45 border-2 border-gold" />
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold" />
-        </div>
-
-        <p className="inline-block px-6 py-2 rounded-full bg-maroon/5 border border-maroon/20 text-maroon text-sm font-medium uppercase tracking-[0.2em] mb-4">
+        <p className="inline-block px-4 py-1.5 rounded-full bg-royal-blue/5 text-royal-blue text-xs font-semibold uppercase tracking-wider mb-4">
           Our Menu
         </p>
-        
-        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-maroon mb-6">
+
+        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-royal-blue mb-6">
           Premium Beauty Services
         </h2>
-        
-        <p className="max-w-2xl mx-auto text-maroon-700/70 text-lg">
+
+        <p className="max-w-2xl mx-auto text-gray-600 text-lg">
           Explore our complete range of services. Click on any category to view all available options.
         </p>
-
-        {/* Bottom Decorative Element */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <div className="w-2 h-2 rounded-full bg-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-3 h-3 rounded-full border-2 border-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-2 h-2 rounded-full bg-gold" />
-        </div>
       </motion.div>
 
       {/* Accordion List */}
@@ -313,22 +282,22 @@ export function Pricing() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="mt-10 rounded-xl bg-maroon p-6 text-center border border-gold/20"
+        className="mt-10 rounded-xl bg-royal-blue/5 p-6 text-center border border-royal-blue/10"
       >
-        <p className="text-cream/90">
+        <p className="text-gray-700">
           For detailed pricing and to book an appointment, please{" "}
           <a
             href="https://wa.me/17705591521"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-gold hover:text-gold-light transition-colors underline underline-offset-2"
+            className="font-semibold text-royal-red hover:text-royal-red-hover transition-colors underline underline-offset-2"
           >
             message us on WhatsApp
           </a>{" "}
           or{" "}
           <a
             href="tel:7705591521"
-            className="font-semibold text-gold hover:text-gold-light transition-colors underline underline-offset-2"
+            className="font-semibold text-royal-red hover:text-royal-red-hover transition-colors underline underline-offset-2"
           >
             call us
           </a>

@@ -7,53 +7,33 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        // Primary maroon/burgundy palette
-        "maroon": {
-          50: "#fdf2f4",
-          100: "#fce7eb",
-          200: "#f9d0d9",
-          300: "#f4a8b8",
-          400: "#ec7691",
-          500: "#e04a6d",
-          600: "#cc2952",
-          700: "#ab1d42",
-          800: "#8f1b3c",
-          900: "#7a1a38",
-          950: "#44091a",
-          DEFAULT: "#6B1C23", // Deep maroon
-          dark: "#4A1118",
-          darker: "#2D0A0E",
+        colors: {
+          // New Premium System
+          "royal-red": {
+            DEFAULT: "#C62828", // Primary CTA
+            hover: "#B71C1C",
+          },
+          "royal-blue": {
+            DEFAULT: "#1E3A8A", // Headings/Trust
+            dark: "#172554",
+          },
+          "cool-white": "#EEF3F8", // Hero/Major sections
+          "warm-white": "#F4F3EF", // Services/Content
+          "soft-grey": "#D1D5DB", // Borders/Cards
+          
+          // Legacy/Compatibility (Retaining but remapping where possible or minimizing)
+          "maroon": {
+            DEFAULT: "#C62828", // Remapped to Royal Red for safety
+            900: "#2B2B2B", // Remapped to Primary Text
+            700: "#1E3A8A", // Remapped to Royal Blue
+          },
+          "gold": {
+            DEFAULT: "#C9A24D", // Soft Gold
+            light: "#D4B46E",
+            dark: "#A68535",
+          },
+          "cream": "#F4F3EF", // Remapped to Warm White
         },
-        // Gold accents
-        "gold": {
-          50: "#fefce8",
-          100: "#fef9c3",
-          200: "#fef08a",
-          300: "#fde047",
-          400: "#facc15",
-          500: "#D4AF37", // Classic gold
-          600: "#C5A028",
-          700: "#A37E16",
-          800: "#854D0E",
-          900: "#713F12",
-          DEFAULT: "#D4AF37",
-          light: "#E8C65A",
-          dark: "#B8962F",
-        },
-        // Cream/off-white backgrounds
-        "cream": {
-          50: "#FFFDF8",
-          100: "#FFF9E8",
-          200: "#FFF3D1",
-          300: "#FFEAB0",
-          DEFAULT: "#FDF5E6",
-          dark: "#F5ECD9",
-        },
-        // Legacy colors for compatibility
-        "soft-gold": "#D4AF37",
-        "ink": "#1A1716",
-      },
       fontFamily: {
         display: ["Cormorant Garamond", "Playfair Display", "Georgia", "serif"],
         serif: ["Cormorant Garamond", "Georgia", "serif"],

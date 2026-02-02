@@ -9,7 +9,7 @@
 }
 
 body {
-  @apply bg-cream text-maroon-900 font-sans;
+  @apply bg-cool-white text-gray-800 font-sans;
 }
 
 html {
@@ -17,113 +17,42 @@ html {
 }
 
 ::selection {
-  background: rgba(212, 175, 55, 0.4);
-  color: #4A1118;
+  background: #C9A24D;
+  color: #FFFFFF;
 }
 
-/* Decorative mandala pattern overlay */
-.mandala-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.08'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20v20h20zM30 30c0 11.046 8.954 20 20 20V30H30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-display text-royal-blue;
 }
 
-/* Ornate corner decorations */
-.ornate-corner::before,
-.ornate-corner::after {
-  content: '';
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0 Q40 0 40 40 Q40 0 80 0' fill='none' stroke='%23D4AF37' stroke-width='1'/%3E%3Cpath d='M0 0 Q0 40 40 40 Q0 40 0 80' fill='none' stroke='%23D4AF37' stroke-width='1'/%3E%3C/svg%3E");
-  opacity: 0.5;
+p {
+  @apply text-gray-600;
 }
 
-.ornate-corner::before {
-  top: 0;
-  left: 0;
-}
-
-.ornate-corner::after {
-  bottom: 0;
-  right: 0;
-  transform: rotate(180deg);
-}
-
-/* Gold decorative divider */
-.gold-divider {
-  @apply relative flex items-center justify-center;
-}
-
-.gold-divider::before,
-.gold-divider::after {
-  content: '';
-  @apply flex-1 h-px bg-gradient-to-r from-transparent via-gold to-transparent;
-}
-
-.gold-divider span {
-  @apply px-4;
-}
-
-/* Elegant card style */
+/* Elegant card style - Updated for light theme */
 .card-elegant {
-  @apply rounded-2xl bg-white p-6 shadow-elegant ring-1 ring-maroon/10 transition-all duration-300 hover:shadow-elegant-lg;
+  @apply rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-md;
 }
 
-/* Maroon card with gold accents */
-.card-maroon {
-  @apply rounded-2xl bg-maroon p-6 text-cream shadow-elegant transition-all duration-300 hover:shadow-elegant-lg border border-gold/20;
+/* Primary Button (Royal Red) */
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full bg-royal-red px-8 py-4 font-semibold text-white shadow-sm transition-all duration-300 hover:bg-royal-red-hover hover:-translate-y-0.5 hover:shadow-md;
 }
 
-/* Section heading styles */
-.section-heading {
-  @apply font-display text-4xl md:text-5xl font-bold text-maroon tracking-wide;
-}
-
-.section-subheading {
-  @apply font-sans text-maroon-700/80 text-lg max-w-2xl mx-auto;
-}
-
-/* Gold accent button */
-.btn-gold {
-  @apply inline-flex items-center justify-center rounded-full bg-gold px-8 py-4 font-semibold text-maroon-900 shadow-gold transition-all duration-300 hover:bg-gold-light hover:scale-105 hover:shadow-lg;
-}
-
-/* Maroon button */
-.btn-maroon {
-  @apply inline-flex items-center justify-center rounded-full bg-maroon px-8 py-4 font-semibold text-cream shadow-elegant transition-all duration-300 hover:bg-maroon-dark hover:scale-105;
-}
-
-/* Outline button */
-.btn-outline {
-  @apply inline-flex items-center justify-center rounded-full border-2 border-maroon px-8 py-4 font-semibold text-maroon transition-all duration-300 hover:bg-maroon hover:text-cream;
+/* Secondary Button (Outline) */
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-gray-300 bg-white px-8 py-4 font-semibold text-royal-blue transition-all duration-300 hover:bg-gray-50 hover:border-gray-400;
 }
 
 /* Circular image container */
 .circular-image {
-  @apply relative w-32 h-32 rounded-full overflow-hidden border-4 border-gold shadow-gold;
-}
-
-/* Service card hover effect */
-.service-card {
-  @apply relative overflow-hidden rounded-2xl bg-white border border-gold/20 shadow-soft transition-all duration-500;
-}
-
-.service-card:hover {
-  @apply shadow-elegant-lg border-gold/40;
-  transform: translateY(-8px);
-}
-
-.service-card::before {
-  content: '';
-  @apply absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-maroon/90 opacity-0 transition-opacity duration-500;
-}
-
-.service-card:hover::before {
-  @apply opacity-100;
-}
-
-/* Decorative gold line */
-.gold-line {
-  @apply h-1 w-16 bg-gradient-to-r from-gold-dark via-gold to-gold-light rounded-full;
+  @apply relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg;
 }
 
 /* Scrollbar styling */
@@ -132,14 +61,13 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-cream;
+  @apply bg-cool-white;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-maroon/30 rounded-full;
+  @apply bg-gray-300 rounded-full border-2 border-cool-white;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-maroon/50;
+  @apply bg-gray-400;
 }
-

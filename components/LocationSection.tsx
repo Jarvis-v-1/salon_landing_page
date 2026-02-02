@@ -10,15 +10,11 @@ export function LocationSection() {
   const googleMapsEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 
   return (
-    <section className="relative py-16 overflow-hidden">
-      {/* Decorative Mandala - Top Left (Quarter visible) */}
-      <div className="absolute -top-[150px] -left-[150px] lg:-top-[200px] lg:-left-[200px] w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] opacity-[0.07] pointer-events-none z-0">
-        <Image
-          src="/decorator.png"
-          alt=""
-          fill
-          className="object-contain"
-        />
+    <section className="relative py-16 overflow-hidden bg-warm-white">
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-royal-blue/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-royal-blue/5 rounded-full blur-3xl" />
       </div>
 
       {/* Section Header */}
@@ -29,33 +25,17 @@ export function LocationSection() {
         transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        {/* Decorative Element */}
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold" />
-          <div className="w-3 h-3 rotate-45 border-2 border-gold" />
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold" />
-        </div>
-
-        <p className="inline-block px-6 py-2 rounded-full bg-maroon/5 border border-maroon/20 text-maroon text-sm font-medium uppercase tracking-[0.2em] mb-4">
+        <p className="inline-block px-4 py-1.5 rounded-full bg-royal-blue/5 text-royal-blue text-xs font-semibold uppercase tracking-wider mb-4">
           Find Us
         </p>
-        
-        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-maroon mb-6">
+
+        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-royal-blue mb-6">
           Visit Our Salon
         </h2>
-        
-        <p className="max-w-2xl mx-auto text-maroon-700/70 text-lg">
+
+        <p className="max-w-2xl mx-auto text-gray-600 text-lg">
           Located in the heart of Duluth, GA. Easy parking and convenient access.
         </p>
-
-        {/* Bottom Decorative Element */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <div className="w-2 h-2 rounded-full bg-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-3 h-3 rounded-full border-2 border-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-2 h-2 rounded-full bg-gold" />
-        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -65,11 +45,11 @@ export function LocationSection() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-2xl bg-maroon p-8 shadow-elegant border border-gold/20"
+          className="relative overflow-hidden rounded-2xl bg-white p-8 shadow-md border border-gray-100"
         >
           {/* Decorative Corners */}
-          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-gold/30 rounded-tl-2xl" />
-          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-gold/30 rounded-br-2xl" />
+          <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-royal-blue/10 rounded-tl-2xl" />
+          <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-royal-blue/10 rounded-br-2xl" />
 
           {/* Content */}
           <div className="relative space-y-6">
@@ -80,34 +60,34 @@ export function LocationSection() {
                 alt="Swapna Beauty Parlour"
                 width={180}
                 height={48}
-                className="h-12 w-auto object-contain brightness-0 invert"
+                className="h-12 w-auto object-contain"
               />
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-gold/50 via-gold/20 to-transparent" />
+            <div className="h-px bg-gray-100" />
 
             {/* Address */}
             <div>
-              <p className="text-cream/60 text-xs uppercase tracking-widest mb-2">Address</p>
-              <p className="text-cream text-lg">{address}</p>
+              <p className="text-gray-400 text-xs uppercase tracking-widest mb-2">Address</p>
+              <p className="text-gray-800 text-lg">{address}</p>
             </div>
 
             {/* Hours */}
             <div className="flex items-start gap-3">
-              <Clock className="h-5 w-5 text-gold mt-0.5" />
+              <Clock className="h-5 w-5 text-royal-blue mt-0.5" />
               <div>
-                <p className="text-cream/60 text-xs uppercase tracking-widest mb-1">Business Hours</p>
-                <p className="text-cream">Mon-Sat: 11am - 7pm</p>
-                <p className="text-cream">Sun: 12pm - 6pm</p>
-                <p className="text-gold text-sm mt-1">Closed on Tuesdays</p>
+                <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Business Hours</p>
+                <p className="text-gray-600">Mon-Sat: 11am - 7pm</p>
+                <p className="text-gray-600">Sun: 12pm - 6pm</p>
+                <p className="text-royal-red text-sm mt-1">Closed on Tuesdays</p>
               </div>
             </div>
 
             {/* Phone */}
             <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-gold" />
-              <a href="tel:7705591521" className="text-cream hover:text-gold transition-colors">
+              <Phone className="h-5 w-5 text-royal-blue" />
+              <a href="tel:7705591521" className="text-gray-800 hover:text-royal-blue transition-colors font-semibold">
                 770-559-1521
               </a>
             </div>
@@ -117,7 +97,7 @@ export function LocationSection() {
               href={googleBusinessUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gold text-maroon-900 font-semibold shadow-gold hover:bg-gold-light hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-royal-blue text-white font-semibold shadow-md hover:bg-royal-blue-hover hover:scale-105 transition-all duration-300"
             >
               Get Directions
               <ExternalLink className="h-4 w-4" />
@@ -131,13 +111,8 @@ export function LocationSection() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-2xl border-4 border-gold/30 shadow-elegant"
+          className="relative overflow-hidden rounded-2xl border-4 border-white shadow-lg"
         >
-          {/* Decorative Corners */}
-          <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-gold rounded-tl-xl z-10" />
-          <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-gold rounded-tr-xl z-10" />
-          <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-gold rounded-bl-xl z-10" />
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-gold rounded-br-xl z-10" />
 
           <iframe
             src={googleMapsEmbedUrl}

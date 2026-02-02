@@ -30,17 +30,16 @@ export function Navbar() {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          isScrolled
-            ? "bg-maroon/95 backdrop-blur-md shadow-elegant py-2"
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${isScrolled
+            ? "bg-white/95 backdrop-blur-md shadow-sm py-2"
             : "bg-transparent py-4"
-        }`}
+          }`}
       >
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between">
             {/* Logo - Only visible when scrolled */}
             <Link href="#home" className="flex items-center group">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: isScrolled ? 1 : 0 }}
                 transition={{ duration: 0.3 }}
@@ -63,11 +62,10 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className={`relative px-4 py-2 text-sm font-medium tracking-wide transition-colors duration-300 group ${
-                    isScrolled
-                      ? "text-cream/90 hover:text-gold"
-                      : "text-cream hover:text-gold"
-                  }`}
+                  className={`relative px-4 py-2 text-sm font-medium tracking-wide transition-colors duration-300 group ${isScrolled
+                      ? "text-royal-blue hover:text-royal-red"
+                      : "text-royal-blue hover:text-royal-red"
+                    }`}
                 >
                   {link.label}
                   <span className="absolute bottom-0 left-1/2 h-0.5 w-0 bg-gold transition-all duration-300 group-hover:left-4 group-hover:w-[calc(100%-2rem)]" />
@@ -80,11 +78,10 @@ export function Navbar() {
               <Link
                 href="https://wa.me/17705591521"
                 target="_blank"
-                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border-2 ${
-                  isScrolled
-                    ? "border-gold text-gold hover:bg-gold hover:text-maroon"
-                    : "border-gold/80 text-gold hover:bg-gold hover:text-maroon"
-                }`}
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 border-2 ${isScrolled
+                    ? "border-royal-blue text-royal-blue hover:bg-royal-blue hover:text-white"
+                    : "border-royal-blue text-royal-blue hover:bg-royal-blue hover:text-white"
+                  }`}
               >
                 Book Now
               </Link>
@@ -94,9 +91,8 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden p-2 rounded-lg transition-colors ${
-                isScrolled ? "text-cream" : "text-cream"
-              }`}
+              className={`md:hidden p-2 rounded-lg transition-colors ${isScrolled ? "text-royal-blue" : "text-royal-blue"
+                }`}
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
@@ -119,7 +115,7 @@ export function Navbar() {
             transition={{ duration: 0.3 }}
             className="fixed inset-x-0 top-0 z-40 pt-20 md:hidden"
           >
-            <div className="bg-maroon/98 backdrop-blur-lg border-b border-gold/20 shadow-elegant-lg">
+            <div className="bg-white/98 backdrop-blur-lg border-b border-royal-blue/10 shadow-lg">
               <div className="px-4 py-6 space-y-4">
                 {NAV_LINKS.map((link, index) => (
                   <motion.a
@@ -129,7 +125,7 @@ export function Navbar() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="block px-4 py-3 text-cream font-medium text-lg border-b border-gold/10 hover:text-gold hover:pl-6 transition-all duration-300"
+                    className="block px-4 py-3 text-royal-blue font-medium text-lg border-b border-gray-100 hover:text-royal-red hover:pl-6 transition-all duration-300"
                   >
                     {link.label}
                   </motion.a>
@@ -139,14 +135,14 @@ export function Navbar() {
                     href="https://wa.me/17705591521"
                     target="_blank"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full py-3 text-center rounded-full border-2 border-gold text-gold font-semibold hover:bg-gold hover:text-maroon transition-all duration-300"
+                    className="w-full py-3 text-center rounded-full border-2 border-royal-blue text-royal-blue font-semibold hover:bg-royal-blue hover:text-white transition-all duration-300"
                   >
                     Book on WhatsApp
                   </Link>
                   <CallNowButton
                     variant="primary"
                     showIcon={false}
-                    className="w-full py-3 text-center rounded-full bg-gold text-maroon-900 font-semibold shadow-gold hover:bg-gold-light transition-all duration-300"
+                    className="w-full py-3 text-center rounded-full bg-royal-red text-white font-semibold shadow-sm hover:bg-royal-red/90 transition-all duration-300"
                   />
                 </div>
               </div>

@@ -17,8 +17,8 @@ export function Contact() {
       title: "Phone",
       value: phoneNumber,
       link: `tel:${phoneNumber.replace(/-/g, "")}`,
-      iconBg: "bg-gold/20",
-      iconColor: "text-gold",
+      iconBg: "bg-royal-blue/10",
+      iconColor: "text-royal-blue",
     },
     {
       icon: MessageCircle,
@@ -34,32 +34,22 @@ export function Contact() {
       title: "Hours",
       value: "Mon-Sat: 11am-7pm",
       subtitle: "Sun: 12pm-6pm • Closed Tuesdays",
-      iconBg: "bg-maroon/10",
-      iconColor: "text-maroon",
+      iconBg: "bg-royal-blue/10",
+      iconColor: "text-royal-blue",
     },
     {
       icon: MapPin,
       title: "Location",
       value: "Duluth, GA",
       link: googleBusinessUrl,
-      iconBg: "bg-maroon/10",
-      iconColor: "text-maroon",
+      iconBg: "bg-royal-blue/10",
+      iconColor: "text-royal-blue",
       external: true,
     },
   ];
 
   return (
-    <section className="relative py-16 overflow-hidden">
-      {/* Decorative Mandala - Bottom Right (Quarter visible) */}
-      <div className="absolute -bottom-[150px] -right-[150px] lg:-bottom-[200px] lg:-right-[200px] w-[300px] h-[300px] lg:w-[400px] lg:h-[400px] opacity-[0.07] pointer-events-none z-0">
-        <Image
-          src="/decorator.png"
-          alt=""
-          fill
-          className="object-contain"
-        />
-      </div>
-
+    <section className="relative py-16 overflow-hidden bg-warm-white">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -68,33 +58,17 @@ export function Contact() {
         transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        {/* Decorative Element */}
-        <div className="flex items-center justify-center gap-4 mb-6">
-          <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold" />
-          <div className="w-3 h-3 rotate-45 border-2 border-gold" />
-          <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold" />
-        </div>
-
-        <p className="inline-block px-6 py-2 rounded-full bg-maroon/5 border border-maroon/20 text-maroon text-sm font-medium uppercase tracking-[0.2em] mb-4">
+        <p className="inline-block px-4 py-1.5 rounded-full bg-royal-blue/5 text-royal-blue text-xs font-semibold uppercase tracking-wider mb-4">
           Get In Touch
         </p>
-        
-        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-maroon mb-6">
+
+        <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-royal-blue mb-6">
           Contact Us
         </h2>
-        
-        <p className="max-w-2xl mx-auto text-maroon-700/70 text-lg">
+
+        <p className="max-w-2xl mx-auto text-gray-600 text-lg">
           Ready to book your appointment? Get in touch with us today!
         </p>
-
-        {/* Bottom Decorative Element */}
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <div className="w-2 h-2 rounded-full bg-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-3 h-3 rounded-full border-2 border-gold" />
-          <div className="h-px w-24 bg-gold" />
-          <div className="w-2 h-2 rounded-full bg-gold" />
-        </div>
       </motion.div>
 
       {/* Contact Cards Grid */}
@@ -107,22 +81,18 @@ export function Contact() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -4 }}
-              className={`group relative bg-white rounded-xl p-6 shadow-soft border border-gold/10 hover:shadow-elegant hover:border-gold/30 transition-all duration-500 h-full min-h-[160px] ${
-                info.link ? "cursor-pointer" : ""
-              }`}
+              className={`group relative bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-royal-blue/20 transition-all duration-500 h-full min-h-[160px] ${info.link ? "cursor-pointer" : ""
+                }`}
             >
-              {/* Decorative Accent */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold via-gold-light to-gold rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
               <div className={`mb-4 w-12 h-12 rounded-full ${info.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                 <info.icon className={`h-5 w-5 ${info.iconColor}`} />
               </div>
-              <h3 className="font-display text-lg font-semibold text-maroon mb-1">
+              <h3 className="font-display text-lg font-semibold text-royal-blue mb-1">
                 {info.title}
               </h3>
               <p className={`text-sm font-medium ${info.iconColor}`}>{info.value}</p>
               {info.subtitle && (
-                <p className="mt-1 text-xs text-maroon-700/60">{info.subtitle}</p>
+                <p className="mt-1 text-xs text-gray-500">{info.subtitle}</p>
               )}
             </motion.div>
           );

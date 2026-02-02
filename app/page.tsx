@@ -6,18 +6,17 @@ import { WhyChooseUs } from "../components/WhyChooseUs";
 import { LocationSection } from "../components/LocationSection";
 import { Contact } from "../components/Contact";
 import { FinalCtaStrip } from "../components/FinalCtaStrip";
+import { Gallery } from "../components/Gallery";
+import { Testimonials } from "../components/Testimonials";
 
 export default function HomePage() {
   return (
-    <div className="w-full">
+    <div className="w-full bg-cool-white">
       <section id="home" className="w-full">
         <Hero />
       </section>
 
       <div className="relative w-full">
-        {/* Decorative background pattern */}
-        <div className="absolute inset-0 mandala-pattern opacity-30 pointer-events-none" />
-        
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-24 sm:space-y-32 py-20">
             <section id="trust">
@@ -31,10 +30,18 @@ export default function HomePage() {
           <Services />
         </section>
 
+        <section id="gallery" className="w-full">
+          <Gallery />
+        </section>
+
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-24 sm:space-y-32 py-20">
             <section id="pricing">
               <Pricing />
+            </section>
+
+            <section id="testimonials">
+              <Testimonials />
             </section>
 
             <section id="why-us">
