@@ -206,8 +206,8 @@ export function Hero() {
                         setCurrentIndex(idx);
                       }}
                       className={`h-1 rounded-full transition-all duration-300 ${idx === currentIndex
-                          ? "w-6 bg-white"
-                          : "w-2 bg-white/40 hover:bg-white/70"
+                        ? "w-6 bg-white"
+                        : "w-2 bg-white/40 hover:bg-white/70"
                         }`}
                       aria-label={`Go to slide ${idx + 1}`}
                     />

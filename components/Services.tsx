@@ -49,6 +49,20 @@ const services: Omit<ServiceCardProps, "index">[] = [
       "Glow-boosting facials for brightening, anti-aging and bridal radiance.",
     image: "/facial.png",
   },
+  {
+    icon: Palette,
+    title: "Highlights",
+    description:
+      "Dimensional highlights that add depth, brightness and a natural sun-kissed finish.",
+    image: "/highlights.jpg",
+  },
+  {
+    icon: Hand,
+    title: "Keratin Treatment",
+    description:
+      "Frizz control and smoothing treatment for shiny, manageable and long-lasting results.",
+    image: "/keratin.jpg",
+  },
 
 ];
 
@@ -96,6 +110,9 @@ function ServiceCard({ icon: Icon, title, description, image, index }: ServiceCa
 }
 
 export function Services() {
+  const topRow = services.slice(0, 4);
+  const bottomRow = services.slice(4);
+
   return (
     <section className="relative py-20 bg-warm-white overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -136,16 +153,19 @@ export function Services() {
           </div>
         </motion.div>
 
-        {/* Services Grid - Changed to Flex to center last items */}
-        <div className="flex flex-wrap justify-center gap-6 lg:gap-8">
-          {services.map((service, index) => (
-            <div
-              key={service.title}
-              className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1.333rem)]"
-            >
-              <ServiceCard {...service} index={index} />
-            </div>
-          ))}
+        {/* Services Grid: 4 on top, 3 on bottom */}
+        <div className="space-y-6 lg:space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {topRow.map((service, index) => (
+              <ServiceCard key={service.title} {...service} index={index} />
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {bottomRow.map((service, index) => (
+              <ServiceCard key={service.title} {...service} index={index + topRow.length} />
+            ))}
+          </div>
         </div>
       </div>
     </section>
