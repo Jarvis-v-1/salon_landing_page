@@ -1,0 +1,108 @@
+# Landing Page Email Integration Guide
+
+This guide explains how to migrate your landing page from SMTP-based email sending to using the backend's Gmail API integration.
+
+## Architecture
+
+Instead of the landing page managing SMTP credentials or Gmail OAuth tokens directly, it should act as a client to the backend API.
+
+**Old Flow (SMTP)**:
+Landing Page -> SMTP Server (using credentials) -> Recipient
+
+**New Flow (Gmail API via Backend)**:
+Landing Page -> **Backend API (`/api/salon/send-email`)** -> Gmail API (using secure tokens) -> Recipient
+
+---
+
+## API Endpoint Details
+
+The backend provides a secure endpoint for sending generic emails.
+
+### Request
+
+- **URL**: `YOUR_BACKEND_URL/api/salon/send-email`
+- **Method**: `POST`
+- **Content-Type**: `application/json`
+
+### Payload (JSON)
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `recipient_email` | String | Yes | The email address of the person you are sending the email to. |
+| `recipient_name` | String | No | The name of the recipient (defaults to "Valued Customer"). |
+| `subject` | String | No | The subject line of the email. |
+| `html_content` | String | Yes* | The HTML version of the email body. |
+| `text_content` | String | Yes* | The plain text version of the email body. |
+
+*\* Note: At least one of `html_content` or `text_content` must be provided.*
+
+### Example Body
+
+```json
+{
+  "recipient_email": "customer@example.com",
+  "recipient_name": "John Doe",
+  "subject": "Thank you for contacting Swapna Beauty Parlour",
+  "html_content": "<h1>Hello John!</h1><p>We received your message and will get back to you soon.</p>",
+  "text_content": "Hello John! We received your message and will get back to you soon."
+}
+```
+
+---
+
+## Example Frontend Implementation (TypeScript)
+
+Replace your existing SMTP sending logic with this [fetch](file:///Users/rakshitjangid/Documents/nand%20dave/salon_prototype/frontend/lib/api.ts#38-63) call:
+
+```typescript
+async function sendEmailViaBackend(data: {
+  email: string;
+  name: string;
+  subject: string;
+  message: string;
+}) {
+  const BACKEND_URL = "https://your-backend-url.com"; // Replace with your actual backend URL
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/salon/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipient_email: data.email,
+        recipient_name: data.name,
+        subject: data.subject,
+        html_content: `<p>${data.message}</p>`,
+        text_content: data.message,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to send email");
+    }
+
+    const result = await response.json();
+    console.log("Email sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
+  }
+}
+```
+
+---
+
+## Benefits
+
+1.  **Security**: Your landing page no longer needs to store SMTP passwords or sensitive API keys.
+2.  **Reliability**: Emails sent via Gmail API have higher deliverability than standard SMTP.
+3.  **Consistency**: All emails (from the dashboard, the AI agent, and the landing page) are sent from the same connected account.
+4.  **Simplicity**: The complex Gmail OAuth flow and token refreshing are handled entirely by the backend.
+
+## Prerequisites
+
+1.  Ensure your Gmail account is connected in the **Admin Settings** page of your dashboard.
+2.  Ensure `EMAIL_PROVIDER=gmail_api` is set in your backend [.env](file:///Users/rakshitjangid/Documents/nand%20dave/salon_prototype/backend/.env) file.

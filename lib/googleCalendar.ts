@@ -18,7 +18,7 @@ function getEnvOptional(name: string): string | undefined {
 export function hasCalendarConfig(): boolean {
   return Boolean(
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL &&
-      process.env.GOOGLE_PRIVATE_KEY
+    process.env.GOOGLE_PRIVATE_KEY
   );
 }
 
@@ -37,12 +37,12 @@ export function getCalendarId(): string {
  */
 export async function getCalendarIdForEmployee(employeeId: EmployeeId): Promise<string> {
   const employee = EMPLOYEES[employeeId];
-  
+
   // First check if employee has calendarId in their config (for backward compatibility)
   if (employee.calendarId) {
     return employee.calendarId;
   }
-  
+
   // Try to get from dynamic API
   try {
     const calendarId = await getDynamicCalendarId(employeeId);
@@ -52,14 +52,14 @@ export async function getCalendarIdForEmployee(employeeId: EmployeeId): Promise<
   } catch (error) {
     console.warn(`Failed to fetch calendar ID from API for ${employeeId}, falling back to ENV:`, error);
   }
-  
+
   // Fallback to environment variable for this employee (for backward compatibility)
   const envVarName = `GOOGLE_CALENDAR_ID_${employeeId.toUpperCase()}`;
   const employeeCalendarId = getEnvOptional(envVarName);
   if (employeeCalendarId) {
     return employeeCalendarId;
   }
-  
+
   // Fall back to default calendar ID
   try {
     return getCalendarId();
@@ -76,10 +76,35 @@ export function getCalendarClient() {
   const clientEmail = getEnv("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   // Private key often contains literal \n in env; normalize.
   // Also handle cases where the key might be wrapped in quotes or have extra whitespace
-  let privateKey = getEnv("GOOGLE_PRIVATE_KEY")
-    .replace(/\\n/g, "\n") // Replace literal \n with actual newlines
-    .replace(/^["']|["']$/g, "") // Remove surrounding quotes if present
-    .trim(); // Remove leading/trailing whitespace
+  let privateKey = getEnv("GOOGLE_PRIVATE_KEY");
+
+  // Handle keys wrapped in quotes in the .env file
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.slice(1, -1);
+  } else if (privateKey.startsWith("'") && privateKey.endsWith("'")) {
+    privateKey = privateKey.slice(1, -1);
+  }
+
+  // Replace literal \n with actual newlines
+  privateKey = privateKey.replace(/\\n/g, "\n");
+
+  const HEADER = "-----BEGIN PRIVATE KEY-----";
+  const FOOTER = "-----END PRIVATE KEY-----";
+
+  if (privateKey.includes(HEADER) && privateKey.includes(FOOTER)) {
+    // Extract body to safely normalize it without breaking headers
+    let body = privateKey.replace(HEADER, "").replace(FOOTER, "").trim();
+
+    // If the body contains spaces but no newlines, it's likely a space-separated one-liner
+    if (body.includes(" ") && !body.includes("\n")) {
+      body = body.replace(/ /g, "\n");
+    }
+
+    // Reconstruct the key with proper newlines
+    privateKey = `${HEADER}\n${body}\n${FOOTER}`;
+  }
+
+  privateKey = privateKey.trim();
 
   // Ensure the private key has proper BEGIN/END markers
   if (!privateKey.includes("BEGIN PRIVATE KEY") && !privateKey.includes("BEGIN RSA PRIVATE KEY")) {

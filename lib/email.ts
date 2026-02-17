@@ -1,15 +1,3 @@
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
-
-interface EmailConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
-}
 
 interface BookingConfirmationParams {
   to: string;
@@ -22,106 +10,27 @@ interface BookingConfirmationParams {
   phone?: string;
 }
 
-let transporter: Transporter | null = null;
-
-/**
- * Get and validate email configuration from environment variables
- */
-function getEmailConfig(): EmailConfig | null {
-  const provider = process.env.EMAIL_PROVIDER;
-  
-  // Currently only SMTP is supported
-  if (provider !== "smtp") {
-    return null;
-  }
-
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT;
-  const username = process.env.SMTP_USERNAME;
-  const password = process.env.SMTP_PASSWORD;
-  const useTLS = process.env.SMTP_USE_TLS === "True" || process.env.SMTP_USE_TLS === "true";
-
-  if (!host || !port || !username || !password) {
-    return null;
-  }
-
-  const portNumber = parseInt(port, 10);
-  if (isNaN(portNumber)) {
-    console.error("Invalid SMTP_PORT:", port);
-    return null;
-  }
-
-  // Port 465 uses SSL (secure: true), port 587 uses STARTTLS (secure: false)
-  const secure = portNumber === 465;
-
-  return {
-    host,
-    port: portNumber,
-    secure,
-    auth: {
-      user: username,
-      pass: password,
-    },
-  };
-}
-
-/**
- * Initialize the email transporter
- */
-function getTransporter(): Transporter | null {
-  if (transporter) {
-    return transporter;
-  }
-
-  const config = getEmailConfig();
-  if (!config) {
-    return null;
-  }
-
-  try {
-    transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      auth: config.auth,
-      // For port 587, we need to explicitly enable STARTTLS
-      ...(config.port === 587 && {
-        requireTLS: true,
-        tls: {
-          rejectUnauthorized: false, // Allow self-signed certificates if needed
-        },
-      }),
-    });
-
-    return transporter;
-  } catch (error) {
-    console.error("Failed to create email transporter:", error);
-    return null;
-  }
-}
-
 /**
  * Check if email is properly configured
  */
 export function isEmailConfigured(): boolean {
-  return getEmailConfig() !== null;
+  return !!process.env.NEXT_PUBLIC_BACKEND_URL || !!process.env.BACKEND_URL;
 }
 
 /**
- * Send booking confirmation email
+ * Send booking confirmation email via Backend API
  */
 export async function sendBookingConfirmation(
   params: BookingConfirmationParams
 ): Promise<void> {
   const { to, customerName, serviceName, employeeName, date, time, duration, phone } = params;
 
-  const emailTransporter = getTransporter();
-  if (!emailTransporter) {
-    throw new Error("Email is not configured. Please set SMTP environment variables.");
-  }
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
 
-  const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USERNAME || "noreply@example.com";
-  const fromName = process.env.SMTP_FROM_NAME || "Swapna Beauty Parlour";
+  if (!backendUrl) {
+    console.warn("Email not sent: NEXT_PUBLIC_BACKEND_URL is not set.");
+    return;
+  }
 
   // HTML email template
   const htmlContent = `
@@ -293,36 +202,42 @@ ${phone ? `Phone: ${phone}\n` : ""}WhatsApp: https://wa.me/17705591521
 Thank you for choosing Swapna Beauty Parlour!
   `.trim();
 
+  const url = `${backendUrl}/api/salon/send-email`;
+  console.log(`[Email] Attempting to send email to ${url}`);
+
   try {
-    await emailTransporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject: "Appointment Confirmed - Swapna Beauty Parlour",
-      text: textContent,
-      html: htmlContent,
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipient_email: to,
+        recipient_name: customerName,
+        subject: "Appointment Confirmed - Swapna Beauty Parlour",
+        html_content: htmlContent,
+        text_content: textContent,
+      }),
     });
 
-    console.log(`Confirmation email sent successfully to ${to}`);
-  } catch (error) {
-    console.error(`Failed to send confirmation email to ${to}:`, error);
-    throw error;
-  }
-}
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Email] API Error Response: ${errorText}`);
 
-/**
- * Verify email configuration by sending a test email
- */
-export async function verifyEmailConfig(testRecipient?: string): Promise<boolean> {
-  const emailTransporter = getTransporter();
-  if (!emailTransporter) {
-    return false;
-  }
+      let errorDetail = `API error: ${response.status} ${response.statusText}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.detail) errorDetail = errorJson.detail;
+      } catch (e) {
+        // Ignore JSON parse error, use text/status
+      }
 
-  try {
-    await emailTransporter.verify();
-    return true;
+      throw new Error(errorDetail);
+    }
+
+    console.log(`[Email] Confirmation email sent successfully to ${to}`);
   } catch (error) {
-    console.error("Email configuration verification failed:", error);
-    return false;
+    console.error(`[Email] Failed to send confirmation email to ${to}:`, error);
+    // We do not re-throw here to prevent failing the entire booking if email fails
   }
 }
