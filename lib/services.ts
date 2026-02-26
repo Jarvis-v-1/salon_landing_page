@@ -14,8 +14,7 @@ export const SERVICES: ServiceOption[] = [
   { id: "bridal", label: "Bridal Makeup", tag: "bridal", durationMin: 180 },
   { id: "threading", label: "Waxing / Threading", tag: "threading", durationMin: 30 },
   { id: "facial", label: "Facial & Skincare", tag: "facial", durationMin: 75 },
-  { id: "manicure", label: "Manicure", tag: "manicure", durationMin: 45 },
-  { id: "pedicure", label: "Pedicure", tag: "pedicure", durationMin: 60 },
+
   {
     id: "interview",
     label: "Interview / Consultation",

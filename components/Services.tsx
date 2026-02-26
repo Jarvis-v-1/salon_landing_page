@@ -33,7 +33,7 @@ const services: Omit<ServiceCardProps, "index">[] = [
     title: "Bridal Makeup",
     description:
       "Soft-glam bridal looks with timeless, camera-ready beauty for your special day.",
-    image: "/bridal.png",
+    image: "/gallery/6.jpeg",
   },
   {
     icon: Sparkles,

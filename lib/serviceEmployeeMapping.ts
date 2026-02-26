@@ -20,10 +20,6 @@ export const SERVICE_EMPLOYEE_MAP: Record<string, EmployeeId[]> = {
   // Facial services - All employees
   facial: ["purvi", "hetvi", "nirali", "varsha"],
 
-  // Manicure/Pedicure - All employees
-  manicure: ["purvi", "hetvi", "nirali", "varsha"],
-  pedicure: ["purvi", "hetvi", "nirali", "varsha"],
-
   // Bridal - Purvi and Hetvi
   bridal: ["purvi", "hetvi"],
 

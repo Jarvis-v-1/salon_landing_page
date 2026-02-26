@@ -5,8 +5,6 @@ export type ServiceTag =
   | "threading"
   | "waxing"
   | "facial"
-  | "manicure"
-  | "pedicure"
   | "bridal"
   | "interview";
 
@@ -35,8 +33,6 @@ export const EMPLOYEES: Record<EmployeeId, Employee> = {
       "threading",
       "waxing",
       "facial",
-      "manicure",
-      "pedicure",
       "bridal",
       "interview"
     ]
@@ -47,7 +43,7 @@ export const EMPLOYEES: Record<EmployeeId, Employee> = {
     role: "Owner",
     appointmentOnly: true,
     // works on most services, not face threading/waxing per notes
-    serviceTags: ["hair", "facial", "manicure", "pedicure", "bridal", "interview"]
+    serviceTags: ["hair", "facial", "bridal", "interview"]
   },
   nirali: {
     id: "nirali",
@@ -55,7 +51,7 @@ export const EMPLOYEES: Record<EmployeeId, Employee> = {
     role: "Employee",
     availableAfter: "11:00",
     availableUntil: "17:30",
-    serviceTags: ["threading", "waxing", "facial", "manicure", "pedicure", "interview"]
+    serviceTags: ["threading", "waxing", "facial", "interview"]
   },
   varsha: {
     id: "varsha",
@@ -63,7 +59,7 @@ export const EMPLOYEES: Record<EmployeeId, Employee> = {
     role: "Employee",
     availableAfter: "13:00",
     availableUntil: "19:00",
-    serviceTags: ["threading", "waxing", "facial", "manicure", "pedicure", "interview"]
+    serviceTags: ["threading", "waxing", "facial", "interview"]
   }
 };
 
