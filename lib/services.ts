@@ -23,7 +23,6 @@ export type ServiceOption = {
 
 export const SERVICES: ServiceOption[] = [
   { id: "haircut", label: "Haircut & Styling", tag: "hair", durationMin: 60 },
-  { id: "color", label: "Hair Color & Highlights", tag: "hair", durationMin: 150 },
   {
     id: "full_hair_color",
     label: "Full hair color / Root touch up",
