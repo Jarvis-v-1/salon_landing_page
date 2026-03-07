@@ -73,3 +73,17 @@ export function buildSlots(params: {
   return slots;
 }
 
+/** Process-time service: two calendar blocks (application, wash & style) with a gap (process). */
+export function getProcessTimeSegments(
+  start: Date,
+  phases: { applicationMin: number; processMin: number; processMax: number; washStyleMin: number; washStyleMax: number }
+): { block1: { start: Date; end: Date }; block2: { start: Date; end: Date } } {
+  const block1End = addMinutes(start, phases.applicationMin);
+  const block2Start = addMinutes(start, phases.applicationMin + phases.processMin);
+  const block2End = addMinutes(block2Start, phases.washStyleMax);
+  return {
+    block1: { start, end: block1End },
+    block2: { start: block2Start, end: block2End },
+  };
+}
+

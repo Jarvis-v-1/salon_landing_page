@@ -1,96 +1,40 @@
 import { NextResponse } from "next/server";
-import { startOfDay, endOfDay } from "date-fns";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { availabilityQuerySchema } from "../../../lib/validation";
-import { getServiceById } from "../../../lib/services";
+import {
+  getServiceById,
+  isProcessTimeService,
+} from "../../../lib/services";
+import {
+  getRoomTypeForService,
+  getRoomUsageAtTime,
+  roomAllowsAdding,
+} from "../../../lib/roomTypes";
+import { fetchBusyBlocks } from "../../../lib/calendarBusy";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
 import { getBusinessHoursForDay } from "../../../lib/businessHours";
-import { buildSlots, overlap, parseHHmm, parseDateInEST } from "../../../lib/time";
 import {
-  getCalendarClient,
-  getCalendarId,
-  getCalendarIdForEmployee,
-  hasCalendarConfig,
-  SALON_TIMEZONE
-} from "../../../lib/googleCalendar";
+  buildSlots,
+  overlap,
+  parseHHmm,
+  parseDateInEST,
+  getProcessTimeSegments,
+} from "../../../lib/time";
 import {
   fetchEmployeeAvailability,
-  type EmployeeAvailabilityResponse,
+  getEmployeeWindowForDate,
+  type EmployeeAvailabilityItem,
 } from "../../../lib/employeeAvailability";
 import { getEmployeesForService } from "../../../lib/serviceEmployeeMapping";
-
-type BusyBlock = { employeeId: EmployeeId; start: Date; end: Date };
-
-async function fetchBusyBlocks(
-  dateISO: string,
-  employeeIds?: EmployeeId[]
-): Promise<BusyBlock[]> {
-  if (!hasCalendarConfig()) return [];
-  const calendar = getCalendarClient();
-
-  // Parse date in EST timezone to avoid day shifts
-  const dateInET = parseDateInEST(dateISO);
-  const dayStartET = startOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
-  const dayEndET = endOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
-  // Convert back to UTC for Google Calendar API (which expects UTC)
-  const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
-  const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
-
-  const blocks: BusyBlock[] = [];
-  
-  // If specific employees requested, only check their calendars
-  const employeesToCheck = employeeIds ?? (Object.keys(EMPLOYEES) as EmployeeId[]);
-
-  // Check each employee's calendar separately
-  for (const employeeId of employeesToCheck) {
-    try {
-      const calendarId = await getCalendarIdForEmployee(employeeId);
-      
-      const resp = await calendar.events.list({
-        calendarId,
-        timeMin: dayStart.toISOString(),
-        timeMax: dayEnd.toISOString(),
-        singleEvents: true,
-        orderBy: "startTime",
-        timeZone: SALON_TIMEZONE
-      });
-
-      const items = resp.data.items ?? [];
-      
-      for (const ev of items) {
-        // Since we're checking employee-specific calendars, we can assume all events belong to that employee
-        // But we still check extendedProperties for consistency
-        const evEmployeeId = (ev.extendedProperties?.private?.employeeId ??
-          employeeId) as EmployeeId;
-        
-        // Only add if it matches the employee we're checking
-        if (evEmployeeId !== employeeId) continue;
-        
-        const s = ev.start?.dateTime;
-        const e = ev.end?.dateTime;
-        if (!s || !e) continue;
-        
-        blocks.push({ 
-          employeeId: evEmployeeId, 
-          start: new Date(s), 
-          end: new Date(e) 
-        });
-      }
-    } catch (error) {
-      // If a specific employee's calendar fails, log but continue with others
-      console.warn(`Failed to fetch calendar for employee ${employeeId}:`, error);
-    }
-  }
-
-  return blocks;
-}
+import { SALON_TIMEZONE } from "../../../lib/googleCalendar";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const parsed = availabilityQuerySchema.safeParse({
     date: url.searchParams.get("date"),
     serviceId: url.searchParams.get("serviceId") ?? undefined,
-    employeeId: url.searchParams.get("employeeId") ?? undefined
+    employeeId: url.searchParams.get("employeeId") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -101,7 +45,6 @@ export async function GET(req: Request) {
   }
 
   const { date, serviceId, employeeId } = parsed.data;
-  // Parse date in EST timezone to avoid day shifts
   const day = parseDateInEST(date);
   const hours = getBusinessHoursForDay(day.getDay());
   if (hours.closed) {
@@ -109,19 +52,24 @@ export async function GET(req: Request) {
       ok: true,
       closed: true,
       businessHours: hours,
-      availableSlots: []
+      availableSlots: [],
     });
   }
 
   const service = getServiceById(serviceId ?? null);
-  const durationMin = service?.durationMin ?? 30;
+  const serviceRoomType = getRoomTypeForService(serviceId ?? null);
 
-  // Step 1: Fetch employee availability from external API
-  let employeeAvailability: EmployeeAvailabilityResponse;
+  // Duration for slot generation: total for process-time (application + process + wash), else durationMin
+  let durationMin = service?.durationMin ?? 30;
+  if (service && isProcessTimeService(service)) {
+    const p = service.phases;
+    durationMin = p.applicationMin + p.processMin + p.washStyleMax;
+  }
+
+  let employeeAvailability: Awaited<ReturnType<typeof fetchEmployeeAvailability>>;
   try {
     employeeAvailability = await fetchEmployeeAvailability();
   } catch (error) {
-    // Fallback: assume all employees available if API fails
     console.warn("Employee availability API failed, assuming all available:", error);
     employeeAvailability = {
       employees: Object.values(EMPLOYEES).map((emp) => ({
@@ -131,88 +79,128 @@ export async function GET(req: Request) {
         last_updated_at: null,
         updated_by: null,
         notes: null,
-      })),
+      })) as EmployeeAvailabilityItem[],
       total_available: Object.keys(EMPLOYEES).length,
       total_employees: Object.keys(EMPLOYEES).length,
     };
   }
 
-  // Step 2: Filter employees by availability status from external API
-  const availableEmployeeIds = employeeAvailability.employees
-    .filter((emp) => emp.is_available)
-    .map((emp) => emp.employee_id as EmployeeId);
-
-  // Step 3: Filter by service compatibility
-  // If service is selected, use service-to-employee mapping
-  // Otherwise, use serviceTags from employee config
-  let serviceCompatibleEmployees: EmployeeId[];
-  if (serviceId && service) {
-    // Use service-to-employee mapping for more precise filtering
-    const serviceEmployees = getEmployeesForService(serviceId);
-    serviceCompatibleEmployees = availableEmployeeIds.filter((id) =>
-      serviceEmployees.includes(id)
-    );
-  } else if (service) {
-    // Fallback to serviceTags if mapping doesn't exist
-    serviceCompatibleEmployees = availableEmployeeIds.filter((id) => {
-      const emp = EMPLOYEES[id];
-      return emp.serviceTags.includes(service.tag);
-    });
-  } else {
-    // No service selected, show all available employees
-    serviceCompatibleEmployees = availableEmployeeIds;
-  }
-
-  // Step 4: If specific employee requested, filter to that employee
-  const employeesToConsider = employeeId
-    ? (serviceCompatibleEmployees.includes(employeeId)
-        ? [employeeId]
-        : [])
-    : serviceCompatibleEmployees;
-
-  // Salon business window for the day
   const windowStart = parseHHmm(day, hours.open);
   const windowEnd = parseHHmm(day, hours.close);
 
-  // Generate candidate slots (15-min granularity)
-  const slots = buildSlots({ windowStart, windowEnd, stepMin: 15, durationMin });
-  
-  // Step 5: Fetch busy blocks from Google Calendar for the employees we're considering
+  const todayInSalon = format(toZonedTime(new Date(), SALON_TIMEZONE), "yyyy-MM-dd");
+  const isSelectedDateToday = date === todayInSalon;
+
+  const employeesToConsiderRaw = employeeId
+    ? (() => {
+        const serviceEmployees = serviceId && service
+          ? getEmployeesForService(serviceId)
+          : (Object.keys(EMPLOYEES) as EmployeeId[]);
+        return serviceEmployees.includes(employeeId) ? [employeeId] : [];
+      })()
+    : (() => {
+        const list = employeeAvailability.employees;
+        const availableIds = (isSelectedDateToday
+          ? list.filter((e) => e.is_available)
+          : list
+        ).map((e) => e.employee_id as EmployeeId);
+        const serviceEmployees =
+          serviceId && service
+            ? getEmployeesForService(serviceId)
+            : (Object.keys(EMPLOYEES) as EmployeeId[]);
+        return availableIds.filter((id) => serviceEmployees.includes(id));
+      })();
+
+  const employeeMap = new Map(
+    employeeAvailability.employees.map((e) => [e.employee_id, e])
+  );
+
+  const employeesToConsider: EmployeeId[] = [];
+  for (const id of employeesToConsiderRaw) {
+    const empApi = employeeMap.get(id);
+    const window = empApi ? getEmployeeWindowForDate(empApi, date) : null;
+    if (window === null) continue;
+    if (isSelectedDateToday && empApi && !empApi.is_available) continue;
+    const empStart = window
+      ? parseHHmm(day, window.start)
+      : (EMPLOYEES[id].availableAfter
+          ? parseHHmm(day, EMPLOYEES[id].availableAfter!)
+          : windowStart);
+    const empEnd = window
+      ? parseHHmm(day, window.end)
+      : (EMPLOYEES[id].availableUntil
+          ? parseHHmm(day, EMPLOYEES[id].availableUntil!)
+          : windowEnd);
+    const effectiveStart =
+      empStart < windowStart ? windowStart : empStart;
+    const effectiveEnd = empEnd > windowEnd ? windowEnd : empEnd;
+    if (effectiveStart >= effectiveEnd) continue;
+    employeesToConsider.push(id);
+  }
+
+  const slots = buildSlots({
+    windowStart,
+    windowEnd,
+    stepMin: 15,
+    durationMin,
+  });
   const busy = await fetchBusyBlocks(date, employeesToConsider);
 
-  // Step 6: Generate available slots, filtering by:
-  // - Employee availability (from external API)
-  // - Service compatibility
-  // - Employee-specific hours
-  // - Google Calendar conflicts
   const availableSlots = slots
     .map((slot) => {
       const availableEmployees = employeesToConsider.filter((id) => {
         const emp = EMPLOYEES[id];
-
-        // Appointment-only employees only appear if explicitly requested
         if (!employeeId && emp.appointmentOnly) return false;
 
-        // Respect employee specific availability hours
-        const empStart = emp.availableAfter
-          ? parseHHmm(day, emp.availableAfter)
-          : windowStart;
-        const empEnd = emp.availableUntil
-          ? parseHHmm(day, emp.availableUntil)
-          : windowEnd;
+        const empApi = employeeMap.get(id);
+        const window = empApi ? getEmployeeWindowForDate(empApi, date) : null;
+        const empStart = window
+          ? parseHHmm(day, window.start)
+          : (emp.availableAfter
+              ? parseHHmm(day, emp.availableAfter)
+              : windowStart);
+        const empEnd = window
+          ? parseHHmm(day, window.end)
+          : (emp.availableUntil
+              ? parseHHmm(day, emp.availableUntil)
+              : windowEnd);
         if (slot.start < empStart || slot.end > empEnd) return false;
 
-        // Check Google Calendar conflicts for this employee
-        const conflicts = busy.some(
-          (b) => b.employeeId === id && overlap(slot.start, slot.end, b.start, b.end)
-        );
-        return !conflicts;
+        if (service && isProcessTimeService(service)) {
+          const { block1, block2 } = getProcessTimeSegments(
+            slot.start,
+            service.phases
+          );
+          const conflict1 = busy.some(
+            (b) =>
+              b.employeeId === id &&
+              overlap(block1.start, block1.end, b.start, b.end)
+          );
+          const conflict2 = busy.some(
+            (b) =>
+              b.employeeId === id &&
+              overlap(block2.start, block2.end, b.start, b.end)
+          );
+          if (conflict1 || conflict2) return false;
+        } else {
+          const conflicts = busy.some(
+            (b) =>
+              b.employeeId === id &&
+              overlap(slot.start, slot.end, b.start, b.end)
+          );
+          if (conflicts) return false;
+        }
+        return true;
       });
+
+      const usage = getRoomUsageAtTime(slot.start, slot.end, busy);
+      const roomOk = roomAllowsAdding(serviceRoomType, usage);
+      const finalEmployees = roomOk ? availableEmployees : [];
 
       return {
         startTimeISO: slot.start.toISOString(),
         endTimeISO: slot.end.toISOString(),
-        availableEmployees,
+        availableEmployees: finalEmployees,
       };
     })
     .filter((s) => s.availableEmployees.length > 0);
@@ -223,7 +211,6 @@ export async function GET(req: Request) {
     businessHours: hours,
     durationMin,
     service: service ? { id: service.id, label: service.label } : null,
-    availableSlots
+    availableSlots,
   });
 }
-

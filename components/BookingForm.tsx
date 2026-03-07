@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { format, parseISO } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { EMPLOYEES } from "../lib/employees";
-import { SERVICES } from "../lib/services";
+import { SERVICES, isProcessTimeService } from "../lib/services";
 import { getEmployeesForService } from "../lib/serviceEmployeeMapping";
 import { useCalendarInit } from "../lib/hooks/useCalendarInit";
 
@@ -306,6 +306,9 @@ export function BookingForm() {
             {availability && availability.ok && !availability.closed ? (
               <p className="text-xs text-maroon-700/60">
                 Duration: <span className="font-medium text-maroon">{service.durationMin} min</span>
+                {isProcessTimeService(service) ? (
+                  <span className="block mt-1">Includes application, process time, and wash &amp; style.</span>
+                ) : null}
               </p>
             ) : null}
           </label>

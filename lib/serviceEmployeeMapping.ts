@@ -14,6 +14,11 @@ export const SERVICE_EMPLOYEE_MAP: Record<string, EmployeeId[]> = {
   // Hair color services - Only Purvi and Hetvi
   color: ["purvi", "hetvi"],
 
+  // Process-time hair services - Purvi and Hetvi
+  full_hair_color: ["purvi", "hetvi"],
+  highlights: ["purvi", "hetvi"],
+  keratin: ["purvi", "hetvi"],
+
   // Threading services - Purvi, Nirali, Varsha (not Hetvi)
   threading: ["purvi", "nirali", "varsha"],
 

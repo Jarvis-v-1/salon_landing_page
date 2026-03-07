@@ -2,19 +2,30 @@ import { NextResponse } from "next/server";
 import { addMinutes, startOfDay, endOfDay, format } from "date-fns";
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { parseISO } from "date-fns";
+import { randomUUID } from "crypto";
 import { createAppointmentSchema } from "../../../lib/validation";
 import { EMPLOYEES, type EmployeeId } from "../../../lib/employees";
-import { getServiceById } from "../../../lib/services";
+import {
+  getServiceById,
+  isProcessTimeService,
+} from "../../../lib/services";
+import { getRoomTypeForService } from "../../../lib/roomTypes";
 import { getBusinessHoursForDay } from "../../../lib/businessHours";
-import { overlap, parseHHmm, parseDateInEST } from "../../../lib/time";
+import { overlap, parseHHmm, parseDateInEST, getProcessTimeSegments } from "../../../lib/time";
 import {
   getCalendarClient,
   getCalendarIdForEmployee,
   hasCalendarConfig,
-  SALON_TIMEZONE
+  SALON_TIMEZONE,
 } from "../../../lib/googleCalendar";
-import { fetchEmployeeAvailability } from "../../../lib/employeeAvailability";
+import {
+  fetchEmployeeAvailability,
+  getEmployeeWindowForDate,
+} from "../../../lib/employeeAvailability";
+import { getRoomUsageAtTime, roomAllowsAdding } from "../../../lib/roomTypes";
+import { fetchBusyBlocks } from "../../../lib/calendarBusy";
 import { sendBookingConfirmation, isEmailConfigured } from "../../../lib/email";
+import { sendSms, getEmployeePhone } from "../../../lib/sms";
 
 async function employeeHasConflict(params: {
   dateISO: string;
@@ -24,33 +35,25 @@ async function employeeHasConflict(params: {
 }): Promise<boolean> {
   const { dateISO, employeeId, start, end } = params;
   if (!hasCalendarConfig()) return false;
-
   const calendar = getCalendarClient();
-  // Use the employee's specific calendar ID
   const calendarId = await getCalendarIdForEmployee(employeeId);
-
-  // Parse date in EST timezone to avoid day shifts
   const dateInET = parseDateInEST(dateISO);
   const dayStartET = startOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
   const dayEndET = endOfDay(toZonedTime(dateInET, SALON_TIMEZONE));
-  // Convert back to UTC for Google Calendar API (which expects UTC)
   const dayStart = fromZonedTime(dayStartET, SALON_TIMEZONE);
   const dayEnd = fromZonedTime(dayEndET, SALON_TIMEZONE);
-
   const resp = await calendar.events.list({
     calendarId,
     timeMin: dayStart.toISOString(),
     timeMax: dayEnd.toISOString(),
     singleEvents: true,
     orderBy: "startTime",
-    timeZone: SALON_TIMEZONE
+    timeZone: SALON_TIMEZONE,
   });
-
   const items = resp.data.items ?? [];
   for (const ev of items) {
-    // Since we're checking employee-specific calendar, all events are for that employee
-    // But we still verify for safety
-    const evEmp = (ev.extendedProperties?.private?.employeeId ?? employeeId) as EmployeeId;
+    const evEmp = (ev.extendedProperties?.private?.employeeId ??
+      employeeId) as EmployeeId;
     if (evEmp !== employeeId) continue;
     const s = ev.start?.dateTime;
     const e = ev.end?.dateTime;
@@ -73,7 +76,10 @@ export async function POST(req: Request) {
   const input = parsed.data;
   const service = getServiceById(input.serviceId);
   if (!service) {
-    return NextResponse.json({ ok: false, error: "UNKNOWN_SERVICE" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "UNKNOWN_SERVICE" },
+      { status: 400 }
+    );
   }
 
   const employee = EMPLOYEES[input.employeeId];
@@ -84,123 +90,246 @@ export async function POST(req: Request) {
     );
   }
 
-  // Parse date in EST timezone to avoid day shifts
   const day = parseDateInEST(input.date);
   const hours = getBusinessHoursForDay(day.getDay());
   if (hours.closed) {
-    return NextResponse.json({ ok: false, error: "SALON_CLOSED" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "SALON_CLOSED" },
+      { status: 400 }
+    );
   }
 
   const start = parseISO(input.startTimeISO);
-  const end = addMinutes(start, service.durationMin);
+  const isProcessTime = isProcessTimeService(service);
+  const end = isProcessTime
+    ? addMinutes(
+        start,
+        service.phases.applicationMin +
+          service.phases.processMin +
+          service.phases.washStyleMax
+      )
+    : addMinutes(start, service.durationMin);
 
-  // Enforce business hours + employee hours server-side
   const salonStart = parseHHmm(day, hours.open);
   const salonEnd = parseHHmm(day, hours.close);
   if (start < salonStart || end > salonEnd) {
-    return NextResponse.json({ ok: false, error: "OUTSIDE_BUSINESS_HOURS" }, { status: 400 });
-  }
-
-  const empStart = employee.availableAfter ? parseHHmm(day, employee.availableAfter) : salonStart;
-  const empEnd = employee.availableUntil ? parseHHmm(day, employee.availableUntil) : salonEnd;
-  if (start < empStart || end > empEnd) {
-    return NextResponse.json({ ok: false, error: "OUTSIDE_EMPLOYEE_HOURS" }, { status: 400 });
-  }
-
-  // Critical: re-check conflicts at booking time (prevents double booking)
-  const conflict = await employeeHasConflict({
-    dateISO: input.date,
-    employeeId: input.employeeId,
-    start,
-    end
-  });
-  if (conflict) {
-    return NextResponse.json({ ok: false, error: "SLOT_UNAVAILABLE" }, { status: 409 });
-  }
-
-  // Step 2: Verify employee is still available (from external API)
-  try {
-    const employeeStatus = await fetchEmployeeAvailability();
-    const employeeStatusData = employeeStatus.employees.find(
-      (emp) => emp.employee_id === input.employeeId
+    return NextResponse.json(
+      { ok: false, error: "OUTSIDE_BUSINESS_HOURS" },
+      { status: 400 }
     );
+  }
 
-    if (!employeeStatusData || !employeeStatusData.is_available) {
+  let employeeAvailability: Awaited<ReturnType<typeof fetchEmployeeAvailability>>;
+  try {
+    employeeAvailability = await fetchEmployeeAvailability();
+  } catch (error) {
+    console.warn("Employee availability API failed, proceeding with booking:", error);
+    employeeAvailability = { employees: [], total_available: 0, total_employees: 0 };
+  }
+  const empApi = employeeAvailability.employees.find(
+    (e) => e.employee_id === input.employeeId
+  );
+  const todayInSalon = format(toZonedTime(new Date(), SALON_TIMEZONE), "yyyy-MM-dd");
+  const isBookingDateToday = input.date === todayInSalon;
+  if (isBookingDateToday && empApi && !empApi.is_available) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "EMPLOYEE_UNAVAILABLE",
+        message: `${employee.name} is currently unavailable. Please select another stylist.`,
+      },
+      { status: 400 }
+    );
+  }
+  const apiWindow = empApi ? getEmployeeWindowForDate(empApi, input.date) : null;
+  const empStart = apiWindow
+    ? parseHHmm(day, apiWindow.start)
+    : employee.availableAfter
+      ? parseHHmm(day, employee.availableAfter)
+      : salonStart;
+  const empEnd = apiWindow
+    ? parseHHmm(day, apiWindow.end)
+    : employee.availableUntil
+      ? parseHHmm(day, employee.availableUntil)
+      : salonEnd;
+  const effectiveStart = empStart < salonStart ? salonStart : empStart;
+  const effectiveEnd = empEnd > salonEnd ? salonEnd : empEnd;
+  if (start < effectiveStart || end > effectiveEnd) {
+    return NextResponse.json(
+      { ok: false, error: "OUTSIDE_EMPLOYEE_HOURS" },
+      { status: 400 }
+    );
+  }
+
+  if (isProcessTime) {
+    const { block1, block2 } = getProcessTimeSegments(start, service.phases);
+    const c1 = await employeeHasConflict({
+      dateISO: input.date,
+      employeeId: input.employeeId,
+      start: block1.start,
+      end: block1.end,
+    });
+    const c2 = await employeeHasConflict({
+      dateISO: input.date,
+      employeeId: input.employeeId,
+      start: block2.start,
+      end: block2.end,
+    });
+    if (c1 || c2) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "EMPLOYEE_UNAVAILABLE",
-          message: `${employee.name} is currently unavailable. Please select another stylist.`,
-        },
-        { status: 400 }
+        { ok: false, error: "SLOT_UNAVAILABLE" },
+        { status: 409 }
       );
     }
-  } catch (error) {
-    // If API fails, proceed with booking (graceful degradation)
-    console.warn("Employee availability API failed, proceeding with booking:", error);
+  } else {
+    const conflict = await employeeHasConflict({
+      dateISO: input.date,
+      employeeId: input.employeeId,
+      start,
+      end,
+    });
+    if (conflict) {
+      return NextResponse.json(
+        { ok: false, error: "SLOT_UNAVAILABLE" },
+        { status: 409 }
+      );
+    }
   }
 
-  // If calendar is not configured yet, return a friendly error for now.
+  const roomType = getRoomTypeForService(input.serviceId);
+  if (roomType) {
+    const busy = await fetchBusyBlocks(input.date);
+    const slotEnd = isProcessTime
+      ? addMinutes(
+          start,
+          service.phases.applicationMin +
+            service.phases.processMin +
+            service.phases.washStyleMax
+        )
+      : addMinutes(start, service.durationMin);
+    const usage = getRoomUsageAtTime(start, slotEnd, busy);
+    if (!roomAllowsAdding(roomType, usage)) {
+      return NextResponse.json(
+        { ok: false, error: "ROOM_UNAVAILABLE", message: "No room available at this time." },
+        { status: 409 }
+      );
+    }
+  }
+
   if (!hasCalendarConfig()) {
     const isVercel = process.env.VERCEL === "1";
     const envHint = isVercel
-      ? "Add them in Vercel Dashboard → Your Project → Settings → Environment Variables. Note: GitHub secrets are NOT automatically used by Vercel - you must add them separately in Vercel."
+      ? "Add them in Vercel Dashboard → Your Project → Settings → Environment Variables."
       : "Add them in your .env.local file for local development.";
-    
     return NextResponse.json(
       {
         ok: false,
         error: "CALENDAR_NOT_CONFIGURED",
-        message: `Google Calendar is not configured. Missing required environment variables: GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY${process.env.GOOGLE_CALENDAR_ID ? "" : ", GOOGLE_CALENDAR_ID"}. ${envHint}`
+        message: `Google Calendar is not configured. ${envHint}`,
       },
       { status: 500 }
     );
   }
 
   const calendar = getCalendarClient();
-  // Use the employee's specific calendar ID
   const calendarId = await getCalendarIdForEmployee(input.employeeId);
-
-  const summary = `${input.customerName} - ${service.label}`;
+  const extendedBase = {
+    employeeId: input.employeeId,
+    serviceId: input.serviceId,
+    customerPhone: input.customerPhone,
+    ...(roomType ? { roomType } : {}),
+  };
   const descriptionLines = [
     `Customer: ${input.customerName}`,
     `Phone: ${input.customerPhone}`,
     input.customerEmail ? `Email: ${input.customerEmail}` : null,
     `Service: ${service.label}`,
     `Employee: ${employee.name}`,
-    input.notes ? `Notes: ${input.notes}` : null
+    input.notes ? `Notes: ${input.notes}` : null,
   ].filter(Boolean);
 
-  // Format dates in Eastern Time zone for Google Calendar
-  // Google Calendar expects the dateTime to represent the local time in the specified timezone
-  const startDateTime = formatInTimeZone(start, SALON_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
-  const endDateTime = formatInTimeZone(end, SALON_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+  let eventId: string;
+  let startTimeISO = start.toISOString();
+  let endTimeISO = end.toISOString();
 
-  const resp = await calendar.events.insert({
-    calendarId,
-    requestBody: {
-      summary,
-      description: descriptionLines.join("\n"),
-      start: { dateTime: startDateTime, timeZone: SALON_TIMEZONE },
-      end: { dateTime: endDateTime, timeZone: SALON_TIMEZONE },
-      extendedProperties: {
-        private: {
-          employeeId: input.employeeId,
-          serviceId: input.serviceId,
-          customerPhone: input.customerPhone
-        }
+  if (isProcessTime) {
+    const groupId = randomUUID();
+    const { block1, block2 } = getProcessTimeSegments(start, service.phases);
+    const fmt = (d: Date) =>
+      formatInTimeZone(d, SALON_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
+    const insert1 = await calendar.events.insert({
+      calendarId,
+      requestBody: {
+        summary: `Application – ${service.label} – ${input.customerName}`,
+        description: descriptionLines.join("\n"),
+        start: { dateTime: fmt(block1.start), timeZone: SALON_TIMEZONE },
+        end: { dateTime: fmt(block1.end), timeZone: SALON_TIMEZONE },
+        extendedProperties: {
+          private: { ...extendedBase, appointmentGroupId: groupId },
+        },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "email", minutes: 24 * 60 },
+            { method: "popup", minutes: 60 },
+          ],
+        },
       },
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: "email", minutes: 24 * 60 }, // 1 day before
-          { method: "popup", minutes: 60 } // 1 hour before
-        ]
-      }
-    }
-  });
+    });
+    const insert2 = await calendar.events.insert({
+      calendarId,
+      requestBody: {
+        summary: `Wash & style – ${service.label} – ${input.customerName}`,
+        description: descriptionLines.join("\n"),
+        start: { dateTime: fmt(block2.start), timeZone: SALON_TIMEZONE },
+        end: { dateTime: fmt(block2.end), timeZone: SALON_TIMEZONE },
+        extendedProperties: {
+          private: { ...extendedBase, appointmentGroupId: groupId },
+        },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "email", minutes: 24 * 60 },
+            { method: "popup", minutes: 60 },
+          ],
+        },
+      },
+    });
+    eventId = insert1.data.id!;
+    startTimeISO = block1.start.toISOString();
+    endTimeISO = block2.end.toISOString();
+  } else {
+    const startDateTime = formatInTimeZone(
+      start,
+      SALON_TIMEZONE,
+      "yyyy-MM-dd'T'HH:mm:ss"
+    );
+    const endDateTime = formatInTimeZone(
+      addMinutes(start, service.durationMin),
+      SALON_TIMEZONE,
+      "yyyy-MM-dd'T'HH:mm:ss"
+    );
+    const resp = await calendar.events.insert({
+      calendarId,
+      requestBody: {
+        summary: `${input.customerName} - ${service.label}`,
+        description: descriptionLines.join("\n"),
+        start: { dateTime: startDateTime, timeZone: SALON_TIMEZONE },
+        end: { dateTime: endDateTime, timeZone: SALON_TIMEZONE },
+        extendedProperties: { private: extendedBase },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "email", minutes: 24 * 60 },
+            { method: "popup", minutes: 60 },
+          ],
+        },
+      },
+    });
+    eventId = resp.data.id!;
+    endTimeISO = addMinutes(start, service.durationMin).toISOString();
+  }
 
-  // Send confirmation email if email is configured and customer provided email
   if (isEmailConfigured() && input.customerEmail) {
     try {
       await sendBookingConfirmation({
@@ -214,18 +343,31 @@ export async function POST(req: Request) {
         phone: input.customerPhone,
       });
     } catch (emailError) {
-      // Log error but don't fail the booking
-      // The appointment is already created in Google Calendar
       console.error("Failed to send confirmation email:", emailError);
     }
   }
 
+  let smsSentToEmployee = false;
+  let smsSentToCustomer = false;
+  try {
+    const empPhone = await getEmployeePhone(input.employeeId);
+    if (empPhone) {
+      const empMsg = `New booking: ${input.customerName} – ${service.label} on ${format(start, "MMM d, yyyy")} at ${format(start, "h:mm a")}. – Swapna Beauty Parlour.`;
+      smsSentToEmployee = await sendSms(empPhone, empMsg);
+    }
+    const custMsg = `Your appointment at Swapna Beauty Parlour is confirmed for ${format(start, "MMM d, yyyy")} at ${format(start, "h:mm a")} (${service.label}). See you soon!`;
+    smsSentToCustomer = await sendSms(input.customerPhone, custMsg);
+  } catch (smsErr) {
+    console.error("SMS send error (booking still succeeded):", smsErr);
+  }
+
   return NextResponse.json({
     ok: true,
-    eventId: resp.data.id,
-    startTimeISO: start.toISOString(),
-    endTimeISO: end.toISOString(),
-    emailSent: isEmailConfigured() && !!input.customerEmail
+    eventId,
+    startTimeISO,
+    endTimeISO,
+    emailSent: isEmailConfigured() && !!input.customerEmail,
+    smsSentToEmployee,
+    smsSentToCustomer,
   });
 }
-
