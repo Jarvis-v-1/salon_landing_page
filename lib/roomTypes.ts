@@ -5,7 +5,8 @@ type BlockWithRoom = { start: Date; end: Date; roomType: RoomType | null };
 
 /**
  * Get room type for a service (facial or body_waxing).
- * Salon constraint: at any time either 1 facial OR 1 body waxing (not both, and only one facial at a time).
+ * Salon constraint: 1 waxing room; facial + waxing allowed (1 of each), or 2 facials when no waxing.
+ * Allowed at any time: (0 or 1 or 2 facials, 0 waxing) or (1 facial, 1 waxing) or (0 facial, 1 waxing).
  */
 export function getRoomTypeForService(serviceId: string | null | undefined): RoomType | null {
   const service = getServiceById(serviceId);
@@ -34,7 +35,10 @@ export function roomAllowsAdding(
 ): boolean {
   if (!roomType) return true;
   if (roomType === "facial") {
-    return usage.body_waxing === 0 && usage.facial < 1;
+    return (
+      (usage.body_waxing === 0 && usage.facial < 2) ||
+      (usage.body_waxing === 1 && usage.facial < 1)
+    );
   }
-  return usage.body_waxing === 0 && usage.facial < 1;
+  return usage.body_waxing === 0 && usage.facial <= 1;
 }
